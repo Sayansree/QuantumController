@@ -5,12 +5,11 @@ MainWindow::MainWindow(ros::NodeHandle _nh, QWidget *parent) :
 {
     LOGO_PATH = ros::package::getPath("quantum_controller") + "/utils/logo.jpeg";
     SAVE_PATH = ros::package::getPath("quantum_controller")+"/saved/";
-    INSPECT_MODE=false;
     ui->setupUi(this);
     //this->setStyleSheet("background-color: #212121;");
     timer = new QTimer(this);
     timer->start(10);
-    t=0;BUFFER=20;DISPLAY_TIME=0;
+    t=0;BUFFER=20;DISPLAY_TIME=0;AUTO_SCROLL_MODE=true;
     PITCH_GRAPH_DISPLAY[state]=PITCH_GRAPH_DISPLAY[error]=
     PITCH_GRAPH_DISPLAY[correction]=PITCH_GRAPH_DISPLAY[setPoint]=true;
     connect(timer, SIGNAL(timeout()),this,SLOT(loop()));
@@ -27,9 +26,11 @@ void MainWindow::setupSlots(){
   connect(ui->PitchCorrection,SIGNAL(stateChanged(int)),this,SLOT(PitchCorrectionGraph(int)));
   connect(ui->graphPitch->yAxis, SIGNAL(rangeChanged(QCPRange)), ui->graphPitch->yAxis2, SLOT(setRange(QCPRange)));
   connect(ui->PitchBuffer,SIGNAL(valueChanged(int)),this,SLOT(PitchBufferChanged(int)));
+  connect(ui->PitchManual,SIGNAL(valueChanged(int)),this,SLOT(PitchDisplayChanged(int)));
   connect(ui->PitchSave, SIGNAL(pressed()), this, SLOT(PitchGraphSave()));
   connect(ui->PitchClear, SIGNAL(pressed()), this, SLOT(PitchGraphClear()));
-  connect(ui->PitchInspect, SIGNAL(pressed()), this, SLOT(PitchGraphInspect()));
+  connect(ui->PitchAutoScroll, SIGNAL(pressed()), this, SLOT(PitchGraphAutoScroll()));
+  connect(ui->PitchInspect, SIGNAL(clicked(bool)), this, SLOT(PitchGraphInspect(bool)));
 }
 void MainWindow::PitchGraph(int val){
   PITCH_GRAPH_DISPLAY[state]=val;
@@ -41,8 +42,25 @@ void MainWindow::PitchGraphClear(){
 void MainWindow::PitchGraphSave(){
   ui->graphPitch->saveBmp(QString::fromStdString(SAVE_PATH+"graph.bmp"));
 }
-void MainWindow::PitchGraphInspect(){
-  INSPECT_MODE=!INSPECT_MODE;
+void MainWindow::PitchGraphAutoScroll(){
+  AUTO_SCROLL_MODE=!AUTO_SCROLL_MODE;
+  if(AUTO_SCROLL_MODE)
+    ui->PitchAutoScroll->setText("NoAutoScroll");
+  else
+    ui->PitchAutoScroll->setText("AutoScroll");
+}
+void MainWindow::PitchGraphInspect(bool val){
+  ui->PitchAutoScroll->setEnabled(!val);
+  ui->PitchManualLabel->setEnabled(val);
+  ui->PitchManual->setEnabled(val);
+  ui->PitchManualValue->setEnabled(val);
+  if(val){
+    ui->PitchManual->setMaximum(t);
+    ui->PitchManual->setSliderPosition(t);
+    DISPLAY_TIME=t;
+  }
+  AUTO_SCROLL_MODE=val;
+  PitchGraphAutoScroll();
 }
 void MainWindow::PitchErrorGraph(int val){
   PITCH_GRAPH_DISPLAY[error]=val;
@@ -59,6 +77,10 @@ void MainWindow::PitchCorrectionGraph(int val){
 void MainWindow::PitchBufferChanged(int val){
   ui->PitchBufferValue->setText(QString::number(val));
   BUFFER=val;
+}
+void MainWindow::PitchDisplayChanged(int val){
+  DISPLAY_TIME=val;
+  ui->PitchManualValue->setText(QString::number(DISPLAY_TIME));
 }
 void MainWindow::setupGraph(QCustomPlot* graph){
   QLinearGradient plotGradient;
@@ -97,7 +119,7 @@ void MainWindow::setupGraph(QCustomPlot* graph){
   graph->yAxis->setLabelColor(Qt::white);
   graph->yAxis2->setLabelColor(Qt::white);
   graph->xAxis->setLabel("mili seconds (ms)");
-  graph->yAxis->setLabel("degrees ()");
+  graph->yAxis->setLabel("degrees (θ)");
   graph->yAxis2->setLabel("PID corection %");
   graph->addGraph()->setName("Pitch");
   graph->addGraph()->setName("Setpoint");
@@ -118,7 +140,6 @@ void MainWindow::clearGraph(QCustomPlot* plt){
 }
 void MainWindow::loop(){
   t++;
-  ROS_INFO("%d\n",t);
   if(PITCH_GRAPH_DISPLAY[state])
     ui->graphPitch->graph(state)->addData(t/10.0, sin(t/10.0));
   if(PITCH_GRAPH_DISPLAY[setPoint])
@@ -127,10 +148,10 @@ void MainWindow::loop(){
     ui->graphPitch->graph(error)->addData(t/10.0, 2*sin(t/10.0));
   if(PITCH_GRAPH_DISPLAY[correction])
     ui->graphPitch->graph(correction)->addData(t/10.0, 2*cos(t/10.0));
-  if(!INSPECT_MODE){
-    ui->graphPitch->xAxis->setRange(t/10.0-BUFFER,t/10.0+BUFFER/5.0);
-    ui->graphPitch->yAxis->rescale();
-    ui->graphPitch->yAxis->scaleRange(1.5);
-  }
+  if(AUTO_SCROLL_MODE)
+    DISPLAY_TIME=t;
+  ui->graphPitch->xAxis->setRange(DISPLAY_TIME/10.0-BUFFER,DISPLAY_TIME/10.0+BUFFER/5.0);
+  ui->graphPitch->yAxis->rescale();
+  ui->graphPitch->yAxis->scaleRange(1.5);
   ui->graphPitch->replot();
 }

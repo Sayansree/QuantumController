@@ -27,11 +27,13 @@ public slots:
     void PitchGraph(int);
     void PitchGraphClear();
     void PitchGraphSave();
-    void PitchGraphInspect();
+    void PitchGraphAutoScroll();
+    void PitchGraphInspect(bool);
     void PitchErrorGraph(int);
     void PitchSetpointGraph(int);
     void PitchCorrectionGraph(int);
     void PitchBufferChanged(int);
+    void PitchDisplayChanged(int);
 
 
 private:
@@ -40,12 +42,12 @@ private:
     void setupSlots();
     void clearGraph(QCustomPlot*);
     enum Data {state,setPoint,error,correction};
-    bool  PITCH_GRAPH_DISPLAY[4],INSPECT_MODE;
+    bool  PITCH_GRAPH_DISPLAY[4],AUTO_SCROLL_MODE;
     std::string LOGO_PATH,SAVE_PATH,CONFIG_PATH;
     QTimer *timer;
     Ui::MainWindow *ui;
     ros::NodeHandle nh;
-    int t,DISPLAY_TIME, BUFFER;
+    int t,BUFFER,DISPLAY_TIME;
 
 };
 
