@@ -4,11 +4,13 @@
 #include <QMainWindow>
 #include <QPixmap>
 #include <QTimer>
+#include <QDebug>
 #include <ros/package.h>
 #include <stdio.h>
 #include <cmath>
 #include <string>
 #include <iostream>
+#include <fstream>
 #include "ui_mainwindow.h"
 
 namespace Ui {
@@ -41,19 +43,31 @@ public slots:
     void PitchPFPChanged(int);
     void PitchIFPChanged(int);
     void PitchDFPChanged(int);
+    void PitchLoad();
+    void PitchSave();
+    void PitchReset();
+    void PitchUpload();
 
 private:
 
     void setupGraph(QCustomPlot*);
     void setupSlots();
     void clearGraph(QCustomPlot*);
-    void load();
-    float decodePID(uint8_t);
+
     enum DataIndex {state,setPoint,error,correction};
     enum PIDIndex { pitchP, pitchI, pitchD,
                     rollP,  rollI,  rollD,
                     yawP,   yawI,   yawD };
-    uint8_t PID[9];
+    struct pid{
+      uint8_t byte=0;
+      void setExp(int);
+      void setData(int);
+      uint8_t getData();
+      uint8_t getExp();
+      float getValue();
+    };
+
+    pid PID[9];
     bool  PITCH_GRAPH_DISPLAY[4],AUTO_SCROLL_MODE;
     std::string LOGO_PATH,SAVE_PATH,CONFIG_PATH;
     QTimer *timer;

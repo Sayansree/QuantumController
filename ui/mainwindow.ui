@@ -1438,7 +1438,7 @@ border-radius: 5px;
          </spacer>
         </item>
         <item>
-         <widget class="QPushButton" name="PitchLoadPID_2">
+         <widget class="QPushButton" name="PitchUploadPID">
           <property name="enabled">
            <bool>true</bool>
           </property>

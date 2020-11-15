@@ -5,19 +5,18 @@ MainWindow::MainWindow( QWidget *parent) :
 {
     LOGO_PATH = ros::package::getPath("quantum_controller") + "/utils/logo.jpeg";
     SAVE_PATH = ros::package::getPath("quantum_controller")+"/saved/";
-    CONFIG_PATH=ros::package::getPath("quantum_controller")+"/config/config.cnf";
+    CONFIG_PATH=ros::package::getPath("quantum_controller")+"/config/";
     ui->setupUi(this);
-    //this->setStyleSheet("background-color: #212121;");
+
     timer = new QTimer(this);
     timer->start(10);
-    for(int i=0;i<9;i++)
-    PID[i]=0;
     t=0;BUFFER=20;DISPLAY_TIME=0;AUTO_SCROLL_MODE=true;
     PITCH_GRAPH_DISPLAY[state]=PITCH_GRAPH_DISPLAY[error]=
     PITCH_GRAPH_DISPLAY[correction]=PITCH_GRAPH_DISPLAY[setPoint]=true;
     connect(timer, SIGNAL(timeout()),this,SLOT(loop()));
     setupSlots();
     setupGraph(ui->graphPitch);
+    PitchLoad();
 }
 MainWindow::~MainWindow(){
     delete ui;
@@ -41,6 +40,10 @@ void MainWindow::setupSlots(){
   connect(ui->PitchPFP,SIGNAL(valueChanged(int)),this,SLOT(PitchPFPChanged(int)));
   connect(ui->PitchIFP,SIGNAL(valueChanged(int)),this,SLOT(PitchIFPChanged(int)));
   connect(ui->PitchDFP,SIGNAL(valueChanged(int)),this,SLOT(PitchDFPChanged(int)));
+  connect(ui->PitchSavePID, SIGNAL(pressed()), this, SLOT(PitchSave()));
+  connect(ui->PitchLoadPID, SIGNAL(pressed()), this, SLOT(PitchLoad()));
+  connect(ui->PitchResetPID, SIGNAL(pressed()), this, SLOT(PitchReset()));
+  connect(ui->PitchUploadPID, SIGNAL(pressed()), this, SLOT(PitchUpload()));
   //connect(ui->PitchP,SIGNAL(valueChanged(int)),this,SLOT(PitchPChanged(int)));
 }
 void MainWindow::PitchGraph(int val){
@@ -94,34 +97,72 @@ void MainWindow::PitchDisplayChanged(int val){
   ui->PitchManualValue->setText(QString::number(DISPLAY_TIME));
 }
 void MainWindow::PitchPChanged(int val){
-  PID[pitchP]=(uint8_t)(PID[pitchP]&0x0F|val<<4);
-  ui->PitchPDisp->setText(QString::number(decodePID(PID[pitchP])));
+  PID[pitchP].setData(val);
+  ui->PitchPDisp->setText(QString::number(PID[pitchP].getValue()));
 }
 void MainWindow::PitchIChanged(int val){
-  PID[pitchI]=(uint8_t)(PID[pitchI]&0x0F|val<<4);
-  ui->PitchIDisp->setText(QString::number(decodePID(PID[pitchI])));
+  PID[pitchI].setData(val);
+  ui->PitchIDisp->setText(QString::number(PID[pitchI].getValue()));
 }
 void MainWindow::PitchDChanged(int val){
-  PID[pitchD]=(uint8_t)(PID[pitchD]&0x0F|val<<4);
-  ui->PitchDDisp->setText(QString::number(decodePID(PID[pitchD])));
+  PID[pitchD].setData(val);
+  ui->PitchDDisp->setText(QString::number(PID[pitchD].getValue()));
 }
 void MainWindow::PitchPFPChanged(int val){
-  PID[pitchP]=(uint8_t)(PID[pitchP]&0xF0|0x0F&val);
+  PID[pitchP].setExp(val);
   ui->PitchPLC->setText(QString::number(pow(2,-val)));
   ui->PitchPMax->setText(QString::number(15*pow(2,-val)));
-  ui->PitchPDisp->setText(QString::number(decodePID(PID[pitchP])));
+  ui->PitchPDisp->setText(QString::number(PID[pitchP].getValue()));
 }
 void MainWindow::PitchIFPChanged(int val){
-  PID[pitchI]=(uint8_t)(PID[pitchI]&0xF0|0x0F&val);
+  PID[pitchI].setExp(val);
   ui->PitchILC->setText(QString::number(pow(2,-val)));
   ui->PitchIMax->setText(QString::number(15*pow(2,-val)));
-  ui->PitchIDisp->setText(QString::number(decodePID(PID[pitchI])));
+  ui->PitchIDisp->setText(QString::number(PID[pitchI].getValue()));
 }
 void MainWindow::PitchDFPChanged(int val){
-  PID[pitchD]=(uint8_t)(PID[pitchD]&0xF0|0x0F&val);
+  PID[pitchD].setExp(val);
   ui->PitchDLC->setText(QString::number(pow(2,-val)));
   ui->PitchDMax->setText(QString::number(15*pow(2,-val)));
-  ui->PitchDDisp->setText(QString::number(decodePID(PID[pitchD])));
+  ui->PitchDDisp->setText(QString::number(PID[pitchD].getValue()));
+}
+void MainWindow::PitchLoad(){
+  std::fstream f;
+  f.open(CONFIG_PATH+"config.pid",std::ios::in);
+  f.seekp(pitchP);
+  f>>PID[pitchP].byte;
+  f>>PID[pitchI].byte;
+  f>>PID[pitchD].byte;
+  f.close();
+  ui->PitchP->setSliderPosition(PID[pitchP].getData());
+  ui->PitchI->setSliderPosition(PID[pitchI].getData());
+  ui->PitchD->setSliderPosition(PID[pitchD].getData());
+  ui->PitchPFP->setSliderPosition(PID[pitchP].getExp());
+  ui->PitchIFP->setSliderPosition(PID[pitchI].getExp());
+  ui->PitchDFP->setSliderPosition(PID[pitchD].getExp());
+}
+void MainWindow::PitchSave(){
+  std::fstream f;
+  f.open(CONFIG_PATH+"config.pid",std::ios::out);
+  f.seekp(pitchP);
+  f<<PID[pitchP].byte;
+  f<<PID[pitchI].byte;
+  f<<PID[pitchD].byte;
+  f.close();
+}
+void MainWindow::PitchReset(){
+  PID[pitchP].byte=0;
+  PID[pitchI].byte=0;
+  PID[pitchD].byte=0;
+  ui->PitchP->setSliderPosition(PID[pitchP].getData());
+  ui->PitchI->setSliderPosition(PID[pitchI].getData());
+  ui->PitchD->setSliderPosition(PID[pitchD].getData());
+  ui->PitchPFP->setSliderPosition(PID[pitchP].getExp());
+  ui->PitchIFP->setSliderPosition(PID[pitchI].getExp());
+  ui->PitchDFP->setSliderPosition(PID[pitchD].getExp());
+}
+void MainWindow::PitchUpload(){
+
 }
 
 void MainWindow::setupGraph(QCustomPlot* graph){
@@ -180,13 +221,7 @@ void MainWindow::clearGraph(QCustomPlot* plt){
   plt->graph(correction)->data()->clear();
   t=0;
 }
-void MainWindow::load(){
-  // std::fstream outf(CONFIG_PATH,std::ios::in);
-  // for(int i=0;i<12;i++);
-  //
-  // outf.close();
 
-}
 void MainWindow::loop(){
   t++;
   if(PITCH_GRAPH_DISPLAY[state])
@@ -204,6 +239,19 @@ void MainWindow::loop(){
   ui->graphPitch->yAxis->scaleRange(1.5);
   ui->graphPitch->replot();
 }
-float MainWindow::decodePID(uint8_t val){
-  return (val>>4)*pow(2,-(val&0x0F));
+
+void MainWindow::pid::setExp(int val){
+  byte=(uint8_t)(byte&0xF0|0x0F&val);
+}
+void MainWindow::pid::setData(int val){
+  byte=(uint8_t)(byte&0x0F|val<<4);
+}
+uint8_t MainWindow::pid::getData(){
+  return byte>>4;
+}
+uint8_t MainWindow::pid::getExp(){
+  return byte&0x0F;
+}
+float MainWindow::pid::getValue(){
+  return (byte>>4)*pow(2,-(byte&0x0F));
 }
