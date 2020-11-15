@@ -3,14 +3,14 @@
 
 int main(int argc, char *argv[])
 {
-    ros::init(argc, argv, "tiburon_gui");
-    ros::NodeHandle nh;
+    //ros::init(argc, argv, "tiburon_gui");
+    //ros::NodeHandle nh;
     QApplication a(argc, argv);
-    MainWindow w(nh);
+    MainWindow w;
     w.show();
     while(w.isVisible())
     {
-      ros::spinOnce();
+      //ros::spinOnce();
       a.processEvents();
     }
     return 0;

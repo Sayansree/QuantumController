@@ -8,11 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   roslib
 )
-find_package(Qt4 REQUIRED COMPONENTS
-  QtCore
-  QtGui
-)
-
+find_package(Qt4 REQUIRED COMPONENTS QtCore QtGui)
 file(GLOB QT_FORMS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ui/*.ui)
 
 set(QT_MOC

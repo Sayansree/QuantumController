@@ -5,8 +5,8 @@
 #-------------------------------------------------
 
 QT       += core gui
-
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT += widgets  printsupport
+#greaterThan(QT_MAJOR_VERSION, 4): 
 
 TARGET = quantumController
 TEMPLATE = app
@@ -16,7 +16,6 @@ TEMPLATE = app
 # depend on your compiler). Please consult the documentation of the
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS
-CONFIG += qwt
 # You can also make your code fail to compile if you use deprecated APIs.
 # In order to do so, uncomment the following line.
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
@@ -29,7 +28,7 @@ SOURCES += \
     src/qcustomplot.cpp
 
 HEADERS += \
-    include/quantumController/mainwindow.h \
+    include/quantum_controller/mainwindow.h \
     include/customplot/qcustomplot.h
 
 FORMS += \

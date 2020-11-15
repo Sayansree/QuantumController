@@ -1,14 +1,17 @@
 #include "quantum_controller/mainwindow.h"
 
-MainWindow::MainWindow(ros::NodeHandle _nh, QWidget *parent) :
-    QMainWindow(parent), nh(_nh), ui(new Ui::MainWindow)
+MainWindow::MainWindow( QWidget *parent) :
+    QMainWindow(parent), ui(new Ui::MainWindow)
 {
     LOGO_PATH = ros::package::getPath("quantum_controller") + "/utils/logo.jpeg";
     SAVE_PATH = ros::package::getPath("quantum_controller")+"/saved/";
+    CONFIG_PATH=ros::package::getPath("quantum_controller")+"/config/config.cnf";
     ui->setupUi(this);
     //this->setStyleSheet("background-color: #212121;");
     timer = new QTimer(this);
     timer->start(10);
+    for(int i=0;i<9;i++)
+    PID[i]=0;
     t=0;BUFFER=20;DISPLAY_TIME=0;AUTO_SCROLL_MODE=true;
     PITCH_GRAPH_DISPLAY[state]=PITCH_GRAPH_DISPLAY[error]=
     PITCH_GRAPH_DISPLAY[correction]=PITCH_GRAPH_DISPLAY[setPoint]=true;
@@ -29,8 +32,16 @@ void MainWindow::setupSlots(){
   connect(ui->PitchManual,SIGNAL(valueChanged(int)),this,SLOT(PitchDisplayChanged(int)));
   connect(ui->PitchSave, SIGNAL(pressed()), this, SLOT(PitchGraphSave()));
   connect(ui->PitchClear, SIGNAL(pressed()), this, SLOT(PitchGraphClear()));
-  connect(ui->PitchAutoScroll, SIGNAL(pressed()), this, SLOT(PitchGraphAutoScroll()));
+  connect(ui->PitchAutoScroll,SIGNAL(pressed()), this, SLOT(PitchGraphAutoScroll()));
   connect(ui->PitchInspect, SIGNAL(clicked(bool)), this, SLOT(PitchGraphInspect(bool)));
+
+  connect(ui->PitchP,SIGNAL(valueChanged(int)),this,SLOT(PitchPChanged(int)));
+  connect(ui->PitchI,SIGNAL(valueChanged(int)),this,SLOT(PitchIChanged(int)));
+  connect(ui->PitchD,SIGNAL(valueChanged(int)),this,SLOT(PitchDChanged(int)));
+  connect(ui->PitchPFP,SIGNAL(valueChanged(int)),this,SLOT(PitchPFPChanged(int)));
+  connect(ui->PitchIFP,SIGNAL(valueChanged(int)),this,SLOT(PitchIFPChanged(int)));
+  connect(ui->PitchDFP,SIGNAL(valueChanged(int)),this,SLOT(PitchDFPChanged(int)));
+  //connect(ui->PitchP,SIGNAL(valueChanged(int)),this,SLOT(PitchPChanged(int)));
 }
 void MainWindow::PitchGraph(int val){
   PITCH_GRAPH_DISPLAY[state]=val;
@@ -82,6 +93,37 @@ void MainWindow::PitchDisplayChanged(int val){
   DISPLAY_TIME=val;
   ui->PitchManualValue->setText(QString::number(DISPLAY_TIME));
 }
+void MainWindow::PitchPChanged(int val){
+  PID[pitchP]=(uint8_t)(PID[pitchP]&0x0F|val<<4);
+  ui->PitchPDisp->setText(QString::number(decodePID(PID[pitchP])));
+}
+void MainWindow::PitchIChanged(int val){
+  PID[pitchI]=(uint8_t)(PID[pitchI]&0x0F|val<<4);
+  ui->PitchIDisp->setText(QString::number(decodePID(PID[pitchI])));
+}
+void MainWindow::PitchDChanged(int val){
+  PID[pitchD]=(uint8_t)(PID[pitchD]&0x0F|val<<4);
+  ui->PitchDDisp->setText(QString::number(decodePID(PID[pitchD])));
+}
+void MainWindow::PitchPFPChanged(int val){
+  PID[pitchP]=(uint8_t)(PID[pitchP]&0xF0|0x0F&val);
+  ui->PitchPLC->setText(QString::number(pow(2,-val)));
+  ui->PitchPMax->setText(QString::number(15*pow(2,-val)));
+  ui->PitchPDisp->setText(QString::number(decodePID(PID[pitchP])));
+}
+void MainWindow::PitchIFPChanged(int val){
+  PID[pitchI]=(uint8_t)(PID[pitchI]&0xF0|0x0F&val);
+  ui->PitchILC->setText(QString::number(pow(2,-val)));
+  ui->PitchIMax->setText(QString::number(15*pow(2,-val)));
+  ui->PitchIDisp->setText(QString::number(decodePID(PID[pitchI])));
+}
+void MainWindow::PitchDFPChanged(int val){
+  PID[pitchD]=(uint8_t)(PID[pitchD]&0xF0|0x0F&val);
+  ui->PitchDLC->setText(QString::number(pow(2,-val)));
+  ui->PitchDMax->setText(QString::number(15*pow(2,-val)));
+  ui->PitchDDisp->setText(QString::number(decodePID(PID[pitchD])));
+}
+
 void MainWindow::setupGraph(QCustomPlot* graph){
   QLinearGradient plotGradient;
   plotGradient.setStart(0, 0);
@@ -138,6 +180,13 @@ void MainWindow::clearGraph(QCustomPlot* plt){
   plt->graph(correction)->data()->clear();
   t=0;
 }
+void MainWindow::load(){
+  // std::fstream outf(CONFIG_PATH,std::ios::in);
+  // for(int i=0;i<12;i++);
+  //
+  // outf.close();
+
+}
 void MainWindow::loop(){
   t++;
   if(PITCH_GRAPH_DISPLAY[state])
@@ -154,4 +203,7 @@ void MainWindow::loop(){
   ui->graphPitch->yAxis->rescale();
   ui->graphPitch->yAxis->scaleRange(1.5);
   ui->graphPitch->replot();
+}
+float MainWindow::decodePID(uint8_t val){
+  return (val>>4)*pow(2,-(val&0x0F));
 }
