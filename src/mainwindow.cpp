@@ -6,8 +6,8 @@ MainWindow::MainWindow( QWidget *parent) :
     LOGO_PATH = ros::package::getPath("quantum_controller") + "/utils/logo.jpeg";
     SAVE_PATH = ros::package::getPath("quantum_controller")+"/saved/";
     CONFIG_PATH=ros::package::getPath("quantum_controller")+"/config/";
-    ui->setupUi(this);
 
+    ui->setupUi(this);
     timer = new QTimer(this);
     timer->start(10);
     t=0;BUFFER=20;DISPLAY_TIME=0;AUTO_SCROLL_MODE=true;
@@ -53,7 +53,15 @@ void MainWindow::PitchGraphClear(){
   clearGraph(ui->graphPitch);
 }
 void MainWindow::PitchGraphSave(){
-  ui->graphPitch->saveBmp(QString::fromStdString(SAVE_PATH+"graph.bmp"));
+  int index;
+  std::fstream f;
+  f.open(CONFIG_PATH+"saveIndex.conf",std::ios::in|std::ios::out);
+  f>>index;
+  f.seekp(0);
+  f<<++index<<std::endl;
+  f.close();
+  ui->graphPitch->saveBmp(QString::fromStdString(SAVE_PATH
+    +std::to_string(index)+"PitchGraph.bmp"));
 }
 void MainWindow::PitchGraphAutoScroll(){
   AUTO_SCROLL_MODE=!AUTO_SCROLL_MODE;
