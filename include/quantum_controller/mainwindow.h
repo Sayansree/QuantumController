@@ -26,6 +26,7 @@ public:
     ~MainWindow();
 public slots:
     void loop();
+
     //Pitch Tuing Window
     void PitchGraph(int);
     void PitchGraphClear();
@@ -59,11 +60,12 @@ private:
                     rollP,  rollI,  rollD,
                     yawP,   yawI,   yawD };
     struct pid{
-      uint8_t byte=0;
+      uint16_t byte=0;
       void setExp(int);
       void setData(int);
-      uint8_t getData();
-      uint8_t getExp();
+      void setValue(float);
+      int getData();
+      int getExp();
       float getValue();
     };
 

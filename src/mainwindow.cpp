@@ -44,7 +44,6 @@ void MainWindow::setupSlots(){
   connect(ui->PitchLoadPID, SIGNAL(pressed()), this, SLOT(PitchLoad()));
   connect(ui->PitchResetPID, SIGNAL(pressed()), this, SLOT(PitchReset()));
   connect(ui->PitchUploadPID, SIGNAL(pressed()), this, SLOT(PitchUpload()));
-  //connect(ui->PitchP,SIGNAL(valueChanged(int)),this,SLOT(PitchPChanged(int)));
 }
 void MainWindow::PitchGraph(int val){
   PITCH_GRAPH_DISPLAY[state]=val;
@@ -110,20 +109,20 @@ void MainWindow::PitchDChanged(int val){
 }
 void MainWindow::PitchPFPChanged(int val){
   PID[pitchP].setExp(val);
-  ui->PitchPLC->setText(QString::number(pow(2,-val)));
-  ui->PitchPMax->setText(QString::number(15*pow(2,-val)));
+  ui->PitchPLC->setText(QString::number(pow(10,val)));
+  ui->PitchPMax->setText(QString::number(999*pow(10,val)));
   ui->PitchPDisp->setText(QString::number(PID[pitchP].getValue()));
 }
 void MainWindow::PitchIFPChanged(int val){
   PID[pitchI].setExp(val);
-  ui->PitchILC->setText(QString::number(pow(2,-val)));
-  ui->PitchIMax->setText(QString::number(15*pow(2,-val)));
+  ui->PitchILC->setText(QString::number(pow(10,val)));
+  ui->PitchIMax->setText(QString::number(999*pow(10,val)));
   ui->PitchIDisp->setText(QString::number(PID[pitchI].getValue()));
 }
 void MainWindow::PitchDFPChanged(int val){
   PID[pitchD].setExp(val);
-  ui->PitchDLC->setText(QString::number(pow(2,-val)));
-  ui->PitchDMax->setText(QString::number(15*pow(2,-val)));
+  ui->PitchDLC->setText(QString::number(pow(10,val)));
+  ui->PitchDMax->setText(QString::number(999*pow(10,val)));
   ui->PitchDDisp->setText(QString::number(PID[pitchD].getValue()));
 }
 void MainWindow::PitchLoad(){
@@ -145,15 +144,15 @@ void MainWindow::PitchSave(){
   std::fstream f;
   f.open(CONFIG_PATH+"config.pid",std::ios::out);
   f.seekp(pitchP);
-  f<<PID[pitchP].byte;
-  f<<PID[pitchI].byte;
-  f<<PID[pitchD].byte;
+  f<<PID[pitchP].byte<<std::endl;
+  f<<PID[pitchI].byte<<std::endl;
+  f<<PID[pitchD].byte<<std::endl;
   f.close();
 }
 void MainWindow::PitchReset(){
-  PID[pitchP].byte=0;
-  PID[pitchI].byte=0;
-  PID[pitchD].byte=0;
+  PID[pitchP].setValue(0);
+  PID[pitchI].setValue(0);
+  PID[pitchD].setValue(0);
   ui->PitchP->setSliderPosition(PID[pitchP].getData());
   ui->PitchI->setSliderPosition(PID[pitchI].getData());
   ui->PitchD->setSliderPosition(PID[pitchD].getData());
@@ -163,7 +162,7 @@ void MainWindow::PitchReset(){
 }
 void MainWindow::PitchUpload(){
 
-}
+} //to do : add upload options
 
 void MainWindow::setupGraph(QCustomPlot* graph){
   QLinearGradient plotGradient;
@@ -202,7 +201,7 @@ void MainWindow::setupGraph(QCustomPlot* graph){
   graph->yAxis->setLabelColor(Qt::white);
   graph->yAxis2->setLabelColor(Qt::white);
   graph->xAxis->setLabel("mili seconds (ms)");
-  graph->yAxis->setLabel("degrees (θ)");
+  graph->yAxis->setLabel("degrees");
   graph->yAxis2->setLabel("PID corection %");
   graph->addGraph()->setName("Pitch");
   graph->addGraph()->setName("Setpoint");
@@ -241,17 +240,33 @@ void MainWindow::loop(){
 }
 
 void MainWindow::pid::setExp(int val){
-  byte=(uint8_t)(byte&0xF0|0x0F&val);
+  val+=16;
+  byte=(uint16_t)(byte&0x83FF|val<<10);
 }
 void MainWindow::pid::setData(int val){
-  byte=(uint8_t)(byte&0x0F|val<<4);
+  byte=(uint16_t)(byte&0x7C00|0x03FF&val);
+  if(val<0)
+  byte|=1<<15;
 }
-uint8_t MainWindow::pid::getData(){
-  return byte>>4;
+void MainWindow::pid::setValue(float val){
+  if(val==0){
+    setData(0);
+    setExp(0);
+    return;
+  }
+  int exp= (int)log10(abs(val)) -2;
+  int data=(int)(val*pow(10,exp));
+  setData(data);
+  setExp(exp);
 }
-uint8_t MainWindow::pid::getExp(){
-  return byte&0x0F;
+int MainWindow::pid::getData(){
+  int data= byte&0x03FF;
+  return(byte>>15==1)?-data:data;
+}
+int MainWindow::pid::getExp(){
+  int exp= (byte&0x7C00)>>10;
+  return exp-16;
 }
 float MainWindow::pid::getValue(){
-  return (byte>>4)*pow(2,-(byte&0x0F));
+  return getData()*pow(10,getExp());
 }
