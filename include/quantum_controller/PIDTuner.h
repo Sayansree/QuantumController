@@ -70,9 +70,31 @@ public slots:
     void RollReset();
     void RollUpload();
 
+    void YawGraph(int);
+    void YawGraphClear();
+    void YawGraphSave();
+    void YawGraphAutoScroll();
+    void YawGraphInspect(bool);
+    void YawErrorGraph(int);
+    void YawSetpointGraph(int);
+    void YawCorrectionGraph(int);
+    void YawBufferChanged(int);
+    void YawDisplayChanged(int);
+    void YawPChanged(int);
+    void YawIChanged(int);
+    void YawDChanged(int);
+    void YawPFPChanged(int);
+    void YawIFPChanged(int);
+    void YawDFPChanged(int);
+    void YawLoad();
+    void YawSave();
+    void YawReset();
+    void YawUpload();
+
 private:
 
-    void setupGraph(QCustomPlot*);
+    void initialiseVariables();
+    void setupGraph(QCustomPlot*,QString);
     void setupSlots();
     void clearGraph(QCustomPlot*);
 
@@ -93,11 +115,12 @@ private:
 
     pid PID[9];
     bool  PITCH_GRAPH_DISPLAY[4],ROLL_GRAPH_DISPLAY[4],
-    YAW_GRAPH_DISPLAY[4],AUTO_SCROLL_MODE;
+    YAW_GRAPH_DISPLAY[4],*GRAPH_DISPLAY,AUTO_SCROLL_MODE;
     std::string LOGO_PATH,SAVE_PATH,CONFIG_PATH;
     QTimer *timer;
+    QCustomPlot *ACTIVE_GRAPH;
     Ui::PIDTuner *ui;
-    int t,BUFFER,DISPLAY_TIME;
+    int t,BUFFER[3],DISPLAY_TIME;
     int ACTIVE_WINDOW;
 
 };
