@@ -12,11 +12,11 @@ find_package(Qt4 REQUIRED COMPONENTS QtCore QtGui)
 file(GLOB QT_FORMS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ui/*.ui)
 
 set(QT_MOC
-  include/quantum_controller/mainwindow.h
+  include/quantum_controller/PIDTuner.h
   include/customplot/qcustomplot.h
   )
 SET(QT_SOURCES
-  src/mainwindow.cpp
+  src/PIDTuner.cpp
   src/qcustomplot.cpp
   )
 
@@ -38,5 +38,5 @@ include_directories(
 add_library(qt_lib ${QT_SOURCES} ${QT_FORMS_HPP} ${QT_MOC_HPP})
 target_link_libraries(qt_lib ${QT_LIBRARIES} ${catkin_LIBRARIES})
 
-add_executable(quantum_gui src/main.cpp)
-target_link_libraries(quantum_gui qt_lib ${catkin_LIBRARIES} )
+add_executable(QuantumPIDTuner src/main.cpp)
+target_link_libraries(QuantumPIDTuner qt_lib ${catkin_LIBRARIES} )

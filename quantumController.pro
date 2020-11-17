@@ -6,7 +6,7 @@
 
 QT       += core gui
 QT += widgets  printsupport
-#greaterThan(QT_MAJOR_VERSION, 4): 
+#greaterThan(QT_MAJOR_VERSION, 4):
 
 TARGET = quantumController
 TEMPLATE = app
@@ -24,12 +24,12 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     src/main.cpp \
-    src/mainwindow.cpp \
+    src/PIDTuner.cpp \
     src/qcustomplot.cpp
 
 HEADERS += \
-    include/quantum_controller/mainwindow.h \
+    include/quantum_controller/PIDTuner.h \
     include/customplot/qcustomplot.h
 
 FORMS += \
-        ui/mainwindow.ui
+    ui/PIDTuner.ui

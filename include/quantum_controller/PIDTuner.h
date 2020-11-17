@@ -1,5 +1,5 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef PIDTUNER_H
+#define PIDTUNER_H
 
 #include <QMainWindow>
 #include <QPixmap>
@@ -11,22 +11,22 @@
 #include <string>
 #include <iostream>
 #include <fstream>
-#include "ui_mainwindow.h"
+#include "ui_PIDTuner.h"
 
 namespace Ui {
-class MainWindow;
+class PIDTuner;
 }
 
-class MainWindow : public QMainWindow
+class PIDTuner : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    explicit MainWindow( QWidget *parent = 0);
-    ~MainWindow();
+    explicit PIDTuner( QWidget *parent = 0);
+    ~PIDTuner();
 public slots:
     void loop();
-
+    void TabChanged(int);
     //Pitch Tuing Window
     void PitchGraph(int);
     void PitchGraphClear();
@@ -49,6 +49,27 @@ public slots:
     void PitchReset();
     void PitchUpload();
 
+    void RollGraph(int);
+    void RollGraphClear();
+    void RollGraphSave();
+    void RollGraphAutoScroll();
+    void RollGraphInspect(bool);
+    void RollErrorGraph(int);
+    void RollSetpointGraph(int);
+    void RollCorrectionGraph(int);
+    void RollBufferChanged(int);
+    void RollDisplayChanged(int);
+    void RollPChanged(int);
+    void RollIChanged(int);
+    void RollDChanged(int);
+    void RollPFPChanged(int);
+    void RollIFPChanged(int);
+    void RollDFPChanged(int);
+    void RollLoad();
+    void RollSave();
+    void RollReset();
+    void RollUpload();
+
 private:
 
     void setupGraph(QCustomPlot*);
@@ -59,6 +80,7 @@ private:
     enum PIDIndex { pitchP, pitchI, pitchD,
                     rollP,  rollI,  rollD,
                     yawP,   yawI,   yawD };
+    enum TabIndex {pitch, roll, yaw};
     struct pid{
       uint16_t byte=0;
       void setExp(int);
@@ -70,12 +92,14 @@ private:
     };
 
     pid PID[9];
-    bool  PITCH_GRAPH_DISPLAY[4],AUTO_SCROLL_MODE;
+    bool  PITCH_GRAPH_DISPLAY[4],ROLL_GRAPH_DISPLAY[4],
+    YAW_GRAPH_DISPLAY[4],AUTO_SCROLL_MODE;
     std::string LOGO_PATH,SAVE_PATH,CONFIG_PATH;
     QTimer *timer;
-    Ui::MainWindow *ui;
+    Ui::PIDTuner *ui;
     int t,BUFFER,DISPLAY_TIME;
+    int ACTIVE_WINDOW;
 
 };
 
-#endif // MAINWINDOW_H
+#endif // PIDTUNER_H

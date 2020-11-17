@@ -1,4 +1,4 @@
-#include "quantum_controller/mainwindow.h"
+#include "quantum_controller/PIDTuner.h"
 #include <QApplication>
 
 int main(int argc, char *argv[])
@@ -6,7 +6,7 @@ int main(int argc, char *argv[])
     //ros::init(argc, argv, "tiburon_gui");
     //ros::NodeHandle nh;
     QApplication a(argc, argv);
-    MainWindow w;
+    PIDTuner w;
     w.show();
     while(w.isVisible())
     {
