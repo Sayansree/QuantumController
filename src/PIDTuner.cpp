@@ -17,181 +17,6 @@ PIDTuner::PIDTuner( QWidget *parent) :
 PIDTuner::~PIDTuner(){
     delete ui;
 }
-void PIDTuner::initialiseVariables(){
-  LOGO_PATH = ros::package::getPath("quantum_controller") + "/utils/logo.jpeg";
-  SAVE_PATH = ros::package::getPath("quantum_controller")+"/saved/";
-  CONFIG_PATH=ros::package::getPath("quantum_controller")+"/config/";
-  t=0;BUFFER[pitch]=BUFFER[roll]=BUFFER[yaw]=20;DISPLAY_TIME=0;
-  PITCH_GRAPH_DISPLAY[state]=PITCH_GRAPH_DISPLAY[error]=
-  PITCH_GRAPH_DISPLAY[correction]=PITCH_GRAPH_DISPLAY[setPoint]=true;
-  ROLL_GRAPH_DISPLAY[state]=ROLL_GRAPH_DISPLAY[error]=
-  ROLL_GRAPH_DISPLAY[correction]=ROLL_GRAPH_DISPLAY[setPoint]=true;
-  YAW_GRAPH_DISPLAY[state]=YAW_GRAPH_DISPLAY[error]=
-  YAW_GRAPH_DISPLAY[correction]=YAW_GRAPH_DISPLAY[setPoint]=true;
-  ui->setupUi(this);
-  timer = new QTimer(this);
-  timer->start(10);
-}
-
-void PIDTuner::TabChanged(int val){
-  PitchGraphClear();
-  PitchGraphInspect(false);
-  RollGraphClear();
-  RollGraphInspect(false);
-  YawGraphClear();
-  YawGraphInspect(false);
-  ACTIVE_WINDOW=val;
-  switch(ACTIVE_WINDOW){
-    case pitch:
-      ACTIVE_GRAPH=ui->graphPitch;
-      GRAPH_DISPLAY=PITCH_GRAPH_DISPLAY;
-      break;
-
-    case roll:
-      ACTIVE_GRAPH=ui->graphRoll;
-      GRAPH_DISPLAY=ROLL_GRAPH_DISPLAY;
-      break;
-
-    case yaw:
-      ACTIVE_GRAPH=ui->graphYaw;
-      GRAPH_DISPLAY=YAW_GRAPH_DISPLAY;
-      break;
-  }
-  AUTO_SCROLL_MODE=true;
-  t=0;
-}
-
-void PIDTuner::setupGraph(QCustomPlot* graph,QString label){
-  QLinearGradient plotGradient;
-  plotGradient.setStart(0, 0);
-  plotGradient.setFinalStop(0, 350);
-  plotGradient.setColorAt(0, QColor(0x45,0x5A,0x64));
-  plotGradient.setColorAt(1, QColor(0x21,0x21,0x21));
-  graph->setBackground(plotGradient);
-  graph->legend->setVisible(true);
-  graph->legend->setBrush(plotGradient);
-  graph->legend->setTextColor(Qt::white);
-  graph->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
-  graph->yAxis2->setVisible(true);
-  graph->yAxis2->setTickLabels(true);
-  graph->xAxis->setBasePen(QPen(Qt::white, 1));
-  graph->yAxis->setBasePen(QPen(Qt::white, 1));
-  graph->yAxis2->setBasePen(QPen(Qt::white, 1));
-  graph->xAxis->setTickPen(QPen(Qt::white, 1));
-  graph->yAxis->setTickPen(QPen(Qt::white, 1));
-  graph->yAxis2->setTickPen(QPen(Qt::white, 1));
-  graph->xAxis->setSubTickPen(QPen(Qt::white, 1));
-  graph->yAxis->setSubTickPen(QPen(Qt::white, 1));
-  graph->yAxis2->setSubTickPen(QPen(Qt::white, 1));
-  graph->xAxis->setTickLabelColor(Qt::white);
-  graph->yAxis->setTickLabelColor(Qt::white);
-  graph->yAxis2->setTickLabelColor(Qt::white);
-  graph->xAxis->grid()->setPen(QPen(QColor(140, 140, 140), 1, Qt::DotLine));
-  graph->yAxis->grid()->setPen(QPen(QColor(140, 140, 140), 1, Qt::DotLine));
-  graph->xAxis->grid()->setSubGridPen(QPen(QColor(80, 80, 80), 1, Qt::DotLine));
-  graph->yAxis->grid()->setSubGridPen(QPen(QColor(80, 80, 80), 1, Qt::DotLine));
-  graph->xAxis->grid()->setSubGridVisible(true);
-  graph->yAxis->grid()->setSubGridVisible(true);
-  graph->xAxis->grid()->setZeroLinePen(Qt::NoPen);
-  graph->yAxis->grid()->setZeroLinePen(QPen(Qt::white, 1));
-  graph->xAxis->setLabelColor(Qt::white);
-  graph->yAxis->setLabelColor(Qt::white);
-  graph->yAxis2->setLabelColor(Qt::white);
-  graph->xAxis->setLabel("mili seconds (ms)");
-  graph->yAxis->setLabel("degrees");
-  graph->yAxis2->setLabel("PID corection %");
-  graph->addGraph()->setName(label);
-  graph->addGraph()->setName("Setpoint");
-  graph->addGraph()->setName("error");
-  graph->addGraph()->setName("PID");
-  graph->graph(state)->setPen(QPen(Qt::yellow));
-  graph->graph(setPoint)->setPen(QPen(Qt::green));
-  graph->graph(error)->setPen(QPen(Qt::red));
-  graph->graph(correction)->setPen(QPen(Qt::cyan));
-
-}
-void PIDTuner::setupSlots(){
-  connect(timer, SIGNAL(timeout()),this,SLOT(loop()));
-  connect(ui->Tuning,SIGNAL(currentChanged(int)),this,SLOT(TabChanged(int)));
-  //pitch setup slots
-  connect(ui->Pitch,SIGNAL(stateChanged(int)),this,SLOT(PitchGraph(int)));
-  connect(ui->PitchError,SIGNAL(stateChanged(int)),this,SLOT(PitchErrorGraph(int)));
-  connect(ui->PitchSetpoint,SIGNAL(stateChanged(int)),this,SLOT(PitchSetpointGraph(int)));
-  connect(ui->PitchCorrection,SIGNAL(stateChanged(int)),this,SLOT(PitchCorrectionGraph(int)));
-  connect(ui->graphPitch->yAxis, SIGNAL(rangeChanged(QCPRange)), ui->graphPitch->yAxis2, SLOT(setRange(QCPRange)));
-  connect(ui->PitchBuffer,SIGNAL(valueChanged(int)),this,SLOT(PitchBufferChanged(int)));
-  connect(ui->PitchManual,SIGNAL(valueChanged(int)),this,SLOT(PitchDisplayChanged(int)));
-  connect(ui->PitchSave, SIGNAL(pressed()), this, SLOT(PitchGraphSave()));
-  connect(ui->PitchClear, SIGNAL(pressed()), this, SLOT(PitchGraphClear()));
-  connect(ui->PitchAutoScroll,SIGNAL(pressed()), this, SLOT(PitchGraphAutoScroll()));
-  connect(ui->PitchInspect, SIGNAL(clicked(bool)), this, SLOT(PitchGraphInspect(bool)));
-
-  connect(ui->PitchP,SIGNAL(valueChanged(int)),this,SLOT(PitchPChanged(int)));
-  connect(ui->PitchI,SIGNAL(valueChanged(int)),this,SLOT(PitchIChanged(int)));
-  connect(ui->PitchD,SIGNAL(valueChanged(int)),this,SLOT(PitchDChanged(int)));
-  connect(ui->PitchPFP,SIGNAL(valueChanged(int)),this,SLOT(PitchPFPChanged(int)));
-  connect(ui->PitchIFP,SIGNAL(valueChanged(int)),this,SLOT(PitchIFPChanged(int)));
-  connect(ui->PitchDFP,SIGNAL(valueChanged(int)),this,SLOT(PitchDFPChanged(int)));
-  connect(ui->PitchSavePID, SIGNAL(pressed()), this, SLOT(PitchSave()));
-  connect(ui->PitchLoadPID, SIGNAL(pressed()), this, SLOT(PitchLoad()));
-  connect(ui->PitchResetPID, SIGNAL(pressed()), this, SLOT(PitchReset()));
-  connect(ui->PitchUploadPID, SIGNAL(pressed()), this, SLOT(PitchUpload()));
-
-  //roll setup slots
-  connect(ui->Roll,SIGNAL(stateChanged(int)),this,SLOT(RollGraph(int)));
-  connect(ui->RollError,SIGNAL(stateChanged(int)),this,SLOT(RollErrorGraph(int)));
-  connect(ui->RollSetpoint,SIGNAL(stateChanged(int)),this,SLOT(RollSetpointGraph(int)));
-  connect(ui->RollCorrection,SIGNAL(stateChanged(int)),this,SLOT(RollCorrectionGraph(int)));
-  connect(ui->graphRoll->yAxis, SIGNAL(rangeChanged(QCPRange)), ui->graphRoll->yAxis2, SLOT(setRange(QCPRange)));
-  connect(ui->RollBuffer,SIGNAL(valueChanged(int)),this,SLOT(RollBufferChanged(int)));
-  connect(ui->RollManual,SIGNAL(valueChanged(int)),this,SLOT(RollDisplayChanged(int)));
-  connect(ui->RollSave, SIGNAL(pressed()), this, SLOT(RollGraphSave()));
-  connect(ui->RollClear, SIGNAL(pressed()), this, SLOT(RollGraphClear()));
-  connect(ui->RollAutoScroll,SIGNAL(pressed()), this, SLOT(RollGraphAutoScroll()));
-  connect(ui->RollInspect, SIGNAL(clicked(bool)), this, SLOT(RollGraphInspect(bool)));
-
-  connect(ui->RollP,SIGNAL(valueChanged(int)),this,SLOT(RollPChanged(int)));
-  connect(ui->RollI,SIGNAL(valueChanged(int)),this,SLOT(RollIChanged(int)));
-  connect(ui->RollD,SIGNAL(valueChanged(int)),this,SLOT(RollDChanged(int)));
-  connect(ui->RollPFP,SIGNAL(valueChanged(int)),this,SLOT(RollPFPChanged(int)));
-  connect(ui->RollIFP,SIGNAL(valueChanged(int)),this,SLOT(RollIFPChanged(int)));
-  connect(ui->RollDFP,SIGNAL(valueChanged(int)),this,SLOT(RollDFPChanged(int)));
-  connect(ui->RollSavePID, SIGNAL(pressed()), this, SLOT(RollSave()));
-  connect(ui->RollLoadPID, SIGNAL(pressed()), this, SLOT(RollLoad()));
-  connect(ui->RollResetPID, SIGNAL(pressed()), this, SLOT(RollReset()));
-  connect(ui->RollUploadPID, SIGNAL(pressed()), this, SLOT(RollUpload()));
-
-  //Yaw setup slots
-  connect(ui->Yaw,SIGNAL(stateChanged(int)),this,SLOT(YawGraph(int)));
-  connect(ui->YawError,SIGNAL(stateChanged(int)),this,SLOT(YawErrorGraph(int)));
-  connect(ui->YawSetpoint,SIGNAL(stateChanged(int)),this,SLOT(YawSetpointGraph(int)));
-  connect(ui->YawCorrection,SIGNAL(stateChanged(int)),this,SLOT(YawCorrectionGraph(int)));
-  connect(ui->graphYaw->yAxis, SIGNAL(rangeChanged(QCPRange)), ui->graphYaw->yAxis2, SLOT(setRange(QCPRange)));
-  connect(ui->YawBuffer,SIGNAL(valueChanged(int)),this,SLOT(YawBufferChanged(int)));
-  connect(ui->YawManual,SIGNAL(valueChanged(int)),this,SLOT(YawDisplayChanged(int)));
-  connect(ui->YawSave, SIGNAL(pressed()), this, SLOT(YawGraphSave()));
-  connect(ui->YawClear, SIGNAL(pressed()), this, SLOT(YawGraphClear()));
-  connect(ui->YawAutoScroll,SIGNAL(pressed()), this, SLOT(YawGraphAutoScroll()));
-  connect(ui->YawInspect, SIGNAL(clicked(bool)), this, SLOT(YawGraphInspect(bool)));
-
-  connect(ui->YawP,SIGNAL(valueChanged(int)),this,SLOT(YawPChanged(int)));
-  connect(ui->YawI,SIGNAL(valueChanged(int)),this,SLOT(YawIChanged(int)));
-  connect(ui->YawD,SIGNAL(valueChanged(int)),this,SLOT(YawDChanged(int)));
-  connect(ui->YawPFP,SIGNAL(valueChanged(int)),this,SLOT(YawPFPChanged(int)));
-  connect(ui->YawIFP,SIGNAL(valueChanged(int)),this,SLOT(YawIFPChanged(int)));
-  connect(ui->YawDFP,SIGNAL(valueChanged(int)),this,SLOT(YawDFPChanged(int)));
-  connect(ui->YawSavePID, SIGNAL(pressed()), this, SLOT(YawSave()));
-  connect(ui->YawLoadPID, SIGNAL(pressed()), this, SLOT(YawLoad()));
-  connect(ui->YawResetPID, SIGNAL(pressed()), this, SLOT(YawReset()));
-  connect(ui->YawUploadPID, SIGNAL(pressed()), this, SLOT(YawUpload()));
-}
-void PIDTuner::clearGraph(QCustomPlot* plt){
-  plt->graph(state)->data()->clear();
-  plt->graph(setPoint)->data()->clear();
-  plt->graph(error)->data()->clear();
-  plt->graph(correction)->data()->clear();
-  t=0;
-}
 
 void PIDTuner::PitchGraph(int val){
   PITCH_GRAPH_DISPLAY[state]=val;
@@ -224,9 +49,8 @@ void PIDTuner::PitchGraphInspect(bool val){
   ui->PitchManual->setEnabled(val);
   ui->PitchManualValue->setEnabled(val);
   if(val){
-    ui->PitchManual->setMaximum(t);
-    ui->PitchManual->setSliderPosition(t);
-    DISPLAY_TIME=t;
+    ui->PitchManual->setMaximum(DISPLAY_TIME);
+    ui->PitchManual->setSliderPosition(DISPLAY_TIME);
   }
   AUTO_SCROLL_MODE=val;
   PitchGraphAutoScroll();
@@ -320,9 +144,6 @@ void PIDTuner::PitchReset(){
   ui->PitchIFP->setSliderPosition(PID[pitchI].getExp());
   ui->PitchDFP->setSliderPosition(PID[pitchD].getExp());
 }
-void PIDTuner::PitchUpload(){
-
-} //to do : add upload options
 
 void PIDTuner::RollGraph(int val){
   ROLL_GRAPH_DISPLAY[state]=val;
@@ -355,9 +176,8 @@ void PIDTuner::RollGraphInspect(bool val){
   ui->RollManual->setEnabled(val);
   ui->RollManualValue->setEnabled(val);
   if(val){
-    ui->RollManual->setMaximum(t);
-    ui->RollManual->setSliderPosition(t);
-    DISPLAY_TIME=t;
+    ui->RollManual->setMaximum(DISPLAY_TIME);
+    ui->RollManual->setSliderPosition(DISPLAY_TIME);
   }
   AUTO_SCROLL_MODE=val;
   RollGraphAutoScroll();
@@ -452,9 +272,6 @@ void PIDTuner::RollReset(){
   ui->RollIFP->setSliderPosition(PID[rollI].getExp());
   ui->RollDFP->setSliderPosition(PID[rollD].getExp());
 }
-void PIDTuner::RollUpload(){
-
-} //to do : add upload options
 
 void PIDTuner::YawGraph(int val){
   ROLL_GRAPH_DISPLAY[state]=val;
@@ -487,9 +304,8 @@ void PIDTuner::YawGraphInspect(bool val){
   ui->YawManual->setEnabled(val);
   ui->YawManualValue->setEnabled(val);
   if(val){
-    ui->YawManual->setMaximum(t);
-    ui->YawManual->setSliderPosition(t);
-    DISPLAY_TIME=t;
+    ui->YawManual->setMaximum(DISPLAY_TIME);
+    ui->YawManual->setSliderPosition(DISPLAY_TIME);
   }
   AUTO_SCROLL_MODE=val;
   YawGraphAutoScroll();
@@ -584,26 +400,202 @@ void PIDTuner::YawReset(){
   ui->YawIFP->setSliderPosition(PID[yawI].getExp());
   ui->YawDFP->setSliderPosition(PID[yawD].getExp());
 }
-void PIDTuner::YawUpload(){
 
-} //to do : add upload options
+void PIDTuner::TabChanged(int val){
+  PitchGraphClear();
+  PitchGraphInspect(false);
+  RollGraphClear();
+  RollGraphInspect(false);
+  YawGraphClear();
+  YawGraphInspect(false);
+  ACTIVE_WINDOW=val;
+  switch(ACTIVE_WINDOW){
+    case pitch:
+      ACTIVE_GRAPH=ui->graphPitch;
+      GRAPH_DISPLAY=PITCH_GRAPH_DISPLAY;
+      break;
+
+    case roll:
+      ACTIVE_GRAPH=ui->graphRoll;
+      GRAPH_DISPLAY=ROLL_GRAPH_DISPLAY;
+      break;
+
+    case yaw:
+      ACTIVE_GRAPH=ui->graphYaw;
+      GRAPH_DISPLAY=YAW_GRAPH_DISPLAY;
+      break;
+  }
+  AUTO_SCROLL_MODE=true;
+  TIME_OFFSET=DISPLAY_TIME;
+}
+void PIDTuner::Upload(){
+}
 
 
+void PIDTuner::initialiseVariables(){
+  LOGO_PATH = ros::package::getPath("quantum_controller") + "/utils/logo.jpeg";
+  SAVE_PATH = ros::package::getPath("quantum_controller")+"/saved/";
+  CONFIG_PATH=ros::package::getPath("quantum_controller")+"/config/";
+  TIME_OFFSET=DISPLAY_TIME=0;BUFFER[pitch]=BUFFER[roll]=BUFFER[yaw]=20;
+  PITCH_GRAPH_DISPLAY[state]=PITCH_GRAPH_DISPLAY[error]=
+  PITCH_GRAPH_DISPLAY[correction]=PITCH_GRAPH_DISPLAY[setPoint]=true;
+  ROLL_GRAPH_DISPLAY[state]=ROLL_GRAPH_DISPLAY[error]=
+  ROLL_GRAPH_DISPLAY[correction]=ROLL_GRAPH_DISPLAY[setPoint]=true;
+  YAW_GRAPH_DISPLAY[state]=YAW_GRAPH_DISPLAY[error]=
+  YAW_GRAPH_DISPLAY[correction]=YAW_GRAPH_DISPLAY[setPoint]=true;
+  ui->setupUi(this);
+}
+void PIDTuner::setupGraph(QCustomPlot* graph,QString label){
+  QLinearGradient plotGradient;
+  plotGradient.setStart(0, 0);
+  plotGradient.setFinalStop(0, 350);
+  plotGradient.setColorAt(0, QColor(0x45,0x5A,0x64));
+  plotGradient.setColorAt(1, QColor(0x21,0x21,0x21));
+  graph->setBackground(plotGradient);
+  graph->legend->setVisible(true);
+  graph->legend->setBrush(plotGradient);
+  graph->legend->setTextColor(Qt::white);
+  graph->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
+  graph->yAxis2->setVisible(true);
+  graph->yAxis2->setTickLabels(true);
+  graph->xAxis->setBasePen(QPen(Qt::white, 1));
+  graph->yAxis->setBasePen(QPen(Qt::white, 1));
+  graph->yAxis2->setBasePen(QPen(Qt::white, 1));
+  graph->xAxis->setTickPen(QPen(Qt::white, 1));
+  graph->yAxis->setTickPen(QPen(Qt::white, 1));
+  graph->yAxis2->setTickPen(QPen(Qt::white, 1));
+  graph->xAxis->setSubTickPen(QPen(Qt::white, 1));
+  graph->yAxis->setSubTickPen(QPen(Qt::white, 1));
+  graph->yAxis2->setSubTickPen(QPen(Qt::white, 1));
+  graph->xAxis->setTickLabelColor(Qt::white);
+  graph->yAxis->setTickLabelColor(Qt::white);
+  graph->yAxis2->setTickLabelColor(Qt::white);
+  graph->xAxis->grid()->setPen(QPen(QColor(140, 140, 140), 1, Qt::DotLine));
+  graph->yAxis->grid()->setPen(QPen(QColor(140, 140, 140), 1, Qt::DotLine));
+  graph->xAxis->grid()->setSubGridPen(QPen(QColor(80, 80, 80), 1, Qt::DotLine));
+  graph->yAxis->grid()->setSubGridPen(QPen(QColor(80, 80, 80), 1, Qt::DotLine));
+  graph->xAxis->grid()->setSubGridVisible(true);
+  graph->yAxis->grid()->setSubGridVisible(true);
+  graph->xAxis->grid()->setZeroLinePen(Qt::NoPen);
+  graph->yAxis->grid()->setZeroLinePen(QPen(Qt::white, 1));
+  graph->xAxis->setLabelColor(Qt::white);
+  graph->yAxis->setLabelColor(Qt::white);
+  graph->yAxis2->setLabelColor(Qt::white);
+  graph->xAxis->setLabel("mili seconds (ms)");
+  graph->yAxis->setLabel("degrees");
+  graph->yAxis2->setLabel("PID corection %");
+  graph->addGraph()->setName(label);
+  graph->addGraph()->setName("Setpoint");
+  graph->addGraph()->setName("error");
+  graph->addGraph()->setName("PID");
+  graph->graph(state)->setPen(QPen(Qt::yellow));
+  graph->graph(setPoint)->setPen(QPen(Qt::green));
+  graph->graph(error)->setPen(QPen(Qt::red));
+  graph->graph(correction)->setPen(QPen(Qt::cyan));
 
-void PIDTuner::loop(){
-  t++;
+}
+void PIDTuner::setupSlots(){
+  connect(ui->Tuning,SIGNAL(currentChanged(int)),this,SLOT(TabChanged(int)));
+  //pitch setup slots
+  connect(ui->Pitch,SIGNAL(stateChanged(int)),this,SLOT(PitchGraph(int)));
+  connect(ui->PitchError,SIGNAL(stateChanged(int)),this,SLOT(PitchErrorGraph(int)));
+  connect(ui->PitchSetpoint,SIGNAL(stateChanged(int)),this,SLOT(PitchSetpointGraph(int)));
+  connect(ui->PitchCorrection,SIGNAL(stateChanged(int)),this,SLOT(PitchCorrectionGraph(int)));
+  connect(ui->graphPitch->yAxis, SIGNAL(rangeChanged(QCPRange)), ui->graphPitch->yAxis2, SLOT(setRange(QCPRange)));
+  connect(ui->PitchBuffer,SIGNAL(valueChanged(int)),this,SLOT(PitchBufferChanged(int)));
+  connect(ui->PitchManual,SIGNAL(valueChanged(int)),this,SLOT(PitchDisplayChanged(int)));
+  connect(ui->PitchSave, SIGNAL(pressed()), this, SLOT(PitchGraphSave()));
+  connect(ui->PitchClear, SIGNAL(pressed()), this, SLOT(PitchGraphClear()));
+  connect(ui->PitchAutoScroll,SIGNAL(pressed()), this, SLOT(PitchGraphAutoScroll()));
+  connect(ui->PitchInspect, SIGNAL(clicked(bool)), this, SLOT(PitchGraphInspect(bool)));
+
+  connect(ui->PitchP,SIGNAL(valueChanged(int)),this,SLOT(PitchPChanged(int)));
+  connect(ui->PitchI,SIGNAL(valueChanged(int)),this,SLOT(PitchIChanged(int)));
+  connect(ui->PitchD,SIGNAL(valueChanged(int)),this,SLOT(PitchDChanged(int)));
+  connect(ui->PitchPFP,SIGNAL(valueChanged(int)),this,SLOT(PitchPFPChanged(int)));
+  connect(ui->PitchIFP,SIGNAL(valueChanged(int)),this,SLOT(PitchIFPChanged(int)));
+  connect(ui->PitchDFP,SIGNAL(valueChanged(int)),this,SLOT(PitchDFPChanged(int)));
+  connect(ui->PitchSavePID, SIGNAL(pressed()), this, SLOT(PitchSave()));
+  connect(ui->PitchLoadPID, SIGNAL(pressed()), this, SLOT(PitchLoad()));
+  connect(ui->PitchResetPID, SIGNAL(pressed()), this, SLOT(PitchReset()));
+  connect(ui->PitchUploadPID, SIGNAL(pressed()), this, SLOT(Upload()));
+
+  //roll setup slots
+  connect(ui->Roll,SIGNAL(stateChanged(int)),this,SLOT(RollGraph(int)));
+  connect(ui->RollError,SIGNAL(stateChanged(int)),this,SLOT(RollErrorGraph(int)));
+  connect(ui->RollSetpoint,SIGNAL(stateChanged(int)),this,SLOT(RollSetpointGraph(int)));
+  connect(ui->RollCorrection,SIGNAL(stateChanged(int)),this,SLOT(RollCorrectionGraph(int)));
+  connect(ui->graphRoll->yAxis, SIGNAL(rangeChanged(QCPRange)), ui->graphRoll->yAxis2, SLOT(setRange(QCPRange)));
+  connect(ui->RollBuffer,SIGNAL(valueChanged(int)),this,SLOT(RollBufferChanged(int)));
+  connect(ui->RollManual,SIGNAL(valueChanged(int)),this,SLOT(RollDisplayChanged(int)));
+  connect(ui->RollSave, SIGNAL(pressed()), this, SLOT(RollGraphSave()));
+  connect(ui->RollClear, SIGNAL(pressed()), this, SLOT(RollGraphClear()));
+  connect(ui->RollAutoScroll,SIGNAL(pressed()), this, SLOT(RollGraphAutoScroll()));
+  connect(ui->RollInspect, SIGNAL(clicked(bool)), this, SLOT(RollGraphInspect(bool)));
+
+  connect(ui->RollP,SIGNAL(valueChanged(int)),this,SLOT(RollPChanged(int)));
+  connect(ui->RollI,SIGNAL(valueChanged(int)),this,SLOT(RollIChanged(int)));
+  connect(ui->RollD,SIGNAL(valueChanged(int)),this,SLOT(RollDChanged(int)));
+  connect(ui->RollPFP,SIGNAL(valueChanged(int)),this,SLOT(RollPFPChanged(int)));
+  connect(ui->RollIFP,SIGNAL(valueChanged(int)),this,SLOT(RollIFPChanged(int)));
+  connect(ui->RollDFP,SIGNAL(valueChanged(int)),this,SLOT(RollDFPChanged(int)));
+  connect(ui->RollSavePID, SIGNAL(pressed()), this, SLOT(RollSave()));
+  connect(ui->RollLoadPID, SIGNAL(pressed()), this, SLOT(RollLoad()));
+  connect(ui->RollResetPID, SIGNAL(pressed()), this, SLOT(RollReset()));
+  connect(ui->RollUploadPID, SIGNAL(pressed()), this, SLOT(Upload()));
+
+  //Yaw setup slots
+  connect(ui->Yaw,SIGNAL(stateChanged(int)),this,SLOT(YawGraph(int)));
+  connect(ui->YawError,SIGNAL(stateChanged(int)),this,SLOT(YawErrorGraph(int)));
+  connect(ui->YawSetpoint,SIGNAL(stateChanged(int)),this,SLOT(YawSetpointGraph(int)));
+  connect(ui->YawCorrection,SIGNAL(stateChanged(int)),this,SLOT(YawCorrectionGraph(int)));
+  connect(ui->graphYaw->yAxis, SIGNAL(rangeChanged(QCPRange)), ui->graphYaw->yAxis2, SLOT(setRange(QCPRange)));
+  connect(ui->YawBuffer,SIGNAL(valueChanged(int)),this,SLOT(YawBufferChanged(int)));
+  connect(ui->YawManual,SIGNAL(valueChanged(int)),this,SLOT(YawDisplayChanged(int)));
+  connect(ui->YawSave, SIGNAL(pressed()), this, SLOT(YawGraphSave()));
+  connect(ui->YawClear, SIGNAL(pressed()), this, SLOT(YawGraphClear()));
+  connect(ui->YawAutoScroll,SIGNAL(pressed()), this, SLOT(YawGraphAutoScroll()));
+  connect(ui->YawInspect, SIGNAL(clicked(bool)), this, SLOT(YawGraphInspect(bool)));
+
+  connect(ui->YawP,SIGNAL(valueChanged(int)),this,SLOT(YawPChanged(int)));
+  connect(ui->YawI,SIGNAL(valueChanged(int)),this,SLOT(YawIChanged(int)));
+  connect(ui->YawD,SIGNAL(valueChanged(int)),this,SLOT(YawDChanged(int)));
+  connect(ui->YawPFP,SIGNAL(valueChanged(int)),this,SLOT(YawPFPChanged(int)));
+  connect(ui->YawIFP,SIGNAL(valueChanged(int)),this,SLOT(YawIFPChanged(int)));
+  connect(ui->YawDFP,SIGNAL(valueChanged(int)),this,SLOT(YawDFPChanged(int)));
+  connect(ui->YawSavePID, SIGNAL(pressed()), this, SLOT(YawSave()));
+  connect(ui->YawLoadPID, SIGNAL(pressed()), this, SLOT(YawLoad()));
+  connect(ui->YawResetPID, SIGNAL(pressed()), this, SLOT(YawReset()));
+  connect(ui->YawUploadPID, SIGNAL(pressed()), this, SLOT(Upload()));
+}
+void PIDTuner::clearGraph(QCustomPlot* plt){
+  plt->graph(state)->data()->clear();
+  plt->graph(setPoint)->data()->clear();
+  plt->graph(error)->data()->clear();
+  plt->graph(correction)->data()->clear();
+  TIME_OFFSET=DISPLAY_TIME;
+}
+
+void PIDTuner::verifyValues(uint16_t val[], bool arr[]){
+  for(int i=0;i<9;i++)
+    arr[i]=PID[i].byte==val[i];
+}
+void PIDTuner::updateDataPoints(double val[][3], double t){
   if(GRAPH_DISPLAY[state])
-    ACTIVE_GRAPH->graph(state)->addData(t/10.0, sin(t/10.0));
+    ACTIVE_GRAPH->graph(state)->addData(t, val[ACTIVE_WINDOW][state]);
   if(GRAPH_DISPLAY[setPoint])
-    ACTIVE_GRAPH->graph(setPoint)->addData(t/10.0, cos(t/10.0));
-  if(GRAPH_DISPLAY[error])
-    ACTIVE_GRAPH->graph(error)->addData(t/10.0, 2*sin(t/10.0));
+    ACTIVE_GRAPH->graph(setPoint)->addData(t, val[ACTIVE_WINDOW][setPoint]);
   if(GRAPH_DISPLAY[correction])
-    ACTIVE_GRAPH->graph(correction)->addData(t/10.0, 2*cos(t/10.0));
+    ACTIVE_GRAPH->graph(correction)->addData(t, val[ACTIVE_WINDOW][correction]);
+  if(GRAPH_DISPLAY[error])
+    ACTIVE_GRAPH->graph(error)->addData(t,val[ACTIVE_WINDOW][state]-
+                                val[ACTIVE_WINDOW][setPoint]);
   if(AUTO_SCROLL_MODE)
     DISPLAY_TIME=t;
-  if(GRAPH_DISPLAY[state]|GRAPH_DISPLAY[setPoint]|GRAPH_DISPLAY[error]|GRAPH_DISPLAY[correction]){
-    ACTIVE_GRAPH->xAxis->setRange(DISPLAY_TIME/10.0-BUFFER[ACTIVE_WINDOW],DISPLAY_TIME/10.0+BUFFER[ACTIVE_WINDOW]/5.0);
+  if(GRAPH_DISPLAY[state]|GRAPH_DISPLAY[setPoint]|
+                                GRAPH_DISPLAY[error]|GRAPH_DISPLAY[correction]){
+    ACTIVE_GRAPH->xAxis->setRange(DISPLAY_TIME-BUFFER[ACTIVE_WINDOW],
+                                DISPLAY_TIME+BUFFER[ACTIVE_WINDOW]/5.0);
     ACTIVE_GRAPH->yAxis->rescale();
     ACTIVE_GRAPH->yAxis->scaleRange(1.5);
     ACTIVE_GRAPH->replot();

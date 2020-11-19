@@ -24,9 +24,11 @@ class PIDTuner : public QMainWindow
 public:
     explicit PIDTuner( QWidget *parent = 0);
     ~PIDTuner();
+
+    void verifyValues(uint16_t [], bool []);
+    void updateDataPoints(double [][3], double t);
+
 public slots:
-    void loop();
-    void TabChanged(int);
     //Pitch Tuing Window
     void PitchGraph(int);
     void PitchGraphClear();
@@ -47,8 +49,8 @@ public slots:
     void PitchLoad();
     void PitchSave();
     void PitchReset();
-    void PitchUpload();
 
+    //Roll Tuning Window
     void RollGraph(int);
     void RollGraphClear();
     void RollGraphSave();
@@ -68,8 +70,8 @@ public slots:
     void RollLoad();
     void RollSave();
     void RollReset();
-    void RollUpload();
 
+    //Yaw Tuning Window
     void YawGraph(int);
     void YawGraphClear();
     void YawGraphSave();
@@ -89,7 +91,9 @@ public slots:
     void YawLoad();
     void YawSave();
     void YawReset();
-    void YawUpload();
+
+    void TabChanged(int);
+    void Upload();
 
 private:
 
@@ -98,7 +102,7 @@ private:
     void setupSlots();
     void clearGraph(QCustomPlot*);
 
-    enum DataIndex {state,setPoint,error,correction};
+    enum DataIndex {state,setPoint,correction,error};
     enum PIDIndex { pitchP, pitchI, pitchD,
                     rollP,  rollI,  rollD,
                     yawP,   yawI,   yawD };
@@ -114,14 +118,14 @@ private:
     };
 
     pid PID[9];
+    double TIME_OFFSET,DISPLAY_TIME;
+    int ACTIVE_WINDOW,BUFFER[3];
     bool  PITCH_GRAPH_DISPLAY[4],ROLL_GRAPH_DISPLAY[4],
     YAW_GRAPH_DISPLAY[4],*GRAPH_DISPLAY,AUTO_SCROLL_MODE;
     std::string LOGO_PATH,SAVE_PATH,CONFIG_PATH;
-    QTimer *timer;
-    QCustomPlot *ACTIVE_GRAPH;
     Ui::PIDTuner *ui;
-    int t,BUFFER[3],DISPLAY_TIME;
-    int ACTIVE_WINDOW;
+    QCustomPlot *ACTIVE_GRAPH;
+
 
 };
 

@@ -1,16 +1,24 @@
 #include "quantum_controller/PIDTuner.h"
 #include <QApplication>
+#include <ros/ros.h>
+
+
 
 int main(int argc, char *argv[])
 {
-    //ros::init(argc, argv, "tiburon_gui");
-    //ros::NodeHandle nh;
     QApplication a(argc, argv);
-    PIDTuner w;
-    w.show();
-    while(w.isVisible())
+    PIDTuner *pidTuner=pidTuner=new PIDTuner();
+    pidTuner->show();
+    //a.exec();
+    float t=0;
+    double v[3][3];
+    while(pidTuner->isVisible())
     {
-      //ros::spinOnce();
+      t+=.1;
+      v[2][0]=v[1][0]=v[0][0]=2*cos(t);
+      v[2][1]=v[1][1]=v[0][1]=sin(t);
+      v[2][2]=v[1][2]=v[0][2]=cos(t);
+      pidTuner->updateDataPoints(v,t);
       a.processEvents();
     }
     return 0;
