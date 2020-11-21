@@ -25,11 +25,14 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     src/main.cpp \
     src/PIDTuner.cpp \
+    src/PIDTunerWidget.cpp \
     src/qcustomplot.cpp
 
 HEADERS += \
     include/quantum_controller/PIDTuner.h \
+    include/quantum_controller/PIDTunerWidget.h \
     include/customplot/qcustomplot.h
 
 FORMS += \
-    ui/PIDTuner.ui
+    ui/PIDTuner.ui \
+    ui/PIDTunerWidget.ui

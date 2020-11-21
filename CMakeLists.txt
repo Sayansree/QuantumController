@@ -13,10 +13,12 @@ file(GLOB QT_FORMS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ui/*.ui)
 
 set(QT_MOC
   include/quantum_controller/PIDTuner.h
+  include/quantum_controller/PIDTunerWidget.h
   include/customplot/qcustomplot.h
   )
 SET(QT_SOURCES
   src/PIDTuner.cpp
+  src/PIDTunerWidget.cpp
   src/qcustomplot.cpp
   )
 
