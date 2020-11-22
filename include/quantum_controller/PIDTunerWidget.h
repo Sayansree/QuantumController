@@ -18,7 +18,7 @@ public:
     explicit PIDTunerWidget(QString, QWidget*);
     ~PIDTunerWidget();
 
-    void updateDataPoints(double [], double t);//
+    void updateDataPoints(double [4], double t);//
     void tabKill();
     //void veri
 public slots:

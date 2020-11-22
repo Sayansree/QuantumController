@@ -104,7 +104,34 @@ void PIDTunerWidget::DFPChanged(int val){
   ui->DMax->setText(QString::number(999*pow(10,val)));
   ui->DDisp->setText(QString::number(PID[d].getValue()));
 }
-
+// void PIDTuner::PitchSave(){
+//   uint16_t d;
+//   int i=0;
+//   std::fstream f;
+//   f.open(CONFIG_PATH+"config.pid",std::ios::in|std::ios::out);
+//   while(i++<pitchP)f>>d;
+//   f<<PID[pitchP].byte<<std::endl;
+//   f<<PID[pitchI].byte<<std::endl;
+//   f<<PID[pitchD].byte<<std::endl;
+//   f.close();
+// }
+// void PIDTuner::PitchLoad(){
+//   uint16_t d;
+//   int i=0;
+//   std::fstream f;
+//   f.open(CONFIG_PATH+"config.pid",std::ios::in);
+//   while(i++<pitchP)f>>d;
+//   f>>PID[pitchP].byte;
+//   f>>PID[pitchI].byte;
+//   f>>PID[pitchD].byte;
+//   f.close();
+//   ui->PitchP->setSliderPosition(PID[pitchP].getData());
+//   ui->PitchI->setSliderPosition(PID[pitchI].getData());
+//   ui->PitchD->setSliderPosition(PID[pitchD].getData());
+//   ui->PitchPFP->setSliderPosition(PID[pitchP].getExp());
+//   ui->PitchIFP->setSliderPosition(PID[pitchI].getExp());
+//   ui->PitchDFP->setSliderPosition(PID[pitchD].getExp());
+// }
 void PIDTunerWidget::Reset(){
   PID[p].setValue(0);
   PID[i].setValue(0);
@@ -123,6 +150,7 @@ void PIDTunerWidget::initialiseVariables(QString label){
   TIME_OFFSET=DISPLAY_TIME=0;BUFFER=20;
   GRAPH_DISPLAY[state]=GRAPH_DISPLAY[error]=
   GRAPH_DISPLAY[correction]=GRAPH_DISPLAY[setPoint]=true;
+  AUTO_SCROLL_MODE=true;
   ui->setupUi(this);
 }
 void PIDTunerWidget::setupGraph(QString label){

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>970</width>
-    <height>862</height>
+    <height>843</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -40,9 +40,9 @@
    <widget class="QWidget" name="horizontalLayoutWidget_5">
     <property name="geometry">
      <rect>
-      <x>10</x>
+      <x>190</x>
       <y>680</y>
-      <width>951</width>
+      <width>771</width>
       <height>61</height>
      </rect>
     </property>
@@ -100,9 +100,9 @@
    <widget class="QWidget" name="horizontalLayoutWidget_6">
     <property name="geometry">
      <rect>
-      <x>10</x>
+      <x>190</x>
       <y>740</y>
-      <width>951</width>
+      <width>771</width>
       <height>61</height>
      </rect>
     </property>
@@ -156,6 +156,16 @@
       </spacer>
      </item>
     </layout>
+   </widget>
+   <widget class="QWidget" name="logo" native="true">
+    <property name="geometry">
+     <rect>
+      <x>19</x>
+      <y>689</y>
+      <width>151</width>
+      <height>121</height>
+     </rect>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">

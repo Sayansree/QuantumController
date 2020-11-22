@@ -1,6 +1,5 @@
 #include "quantum_controller/PIDTuner.h"
 #include <QApplication>
-#include <ros/ros.h>
 
 
 
