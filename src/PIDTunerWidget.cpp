@@ -104,15 +104,30 @@ void PIDTunerWidget::DFPChanged(int val){
   ui->DDisp->setText(QString::number(PID[d].getValue()));
 }
 void PIDTunerWidget::Save(){
-//   uint16_t d;
-//   int i=0;
-//   std::fstream f;
-//   f.open(CONFIG_PATH+"config.pid",std::ios::in|std::ios::out);
-//   while(i++<pitchP)f>>d;
-//   f<<PID[pitchP].byte<<std::endl;
-//   f<<PID[pitchI].byte<<std::endl;
-//   f<<PID[pitchD].byte<<std::endl;
-
+  std::string line;
+  std::vector <std::string> tokens,lines;
+  std::fstream f;
+  f.open(CONFIG_PATH+"config.pid",std::ios::in);
+  while (std::getline(f, line))
+  {
+     boost::trim(line);
+     lines.push_back(line+"\n");
+     if (line[0] == '#' || line.size() == 0)
+       continue;
+     tokens=boost::split(tokens,line,boost::is_any_of(",:|[]()<>"));
+     if(tokens[0]==LABEL.toStdString()){
+       line=tokens[0]+"<"
+       +std::to_string(PID[p].getValue())+","
+       +std::to_string(PID[i].getValue())+","
+       +std::to_string(PID[d].getValue())+">\n";
+       lines.back()=line;
+     }
+   }
+   f.close();
+   f.open(CONFIG_PATH+"config.pid",std::ios::out);
+   for(std::string l:lines)
+      f<<l;
+   f.close();
 }
 void PIDTunerWidget::Load(){
   std::string line;
