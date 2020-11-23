@@ -3,10 +3,9 @@
 PIDTunerWidget::PIDTunerWidget(QString title, QWidget *parent) :
     QWidget(parent), ui(new Ui::PIDTunerWidget){
     initialiseVariables(title);
-    setupGraph(title);
+    setupGraph();
     setupSlots();
-
-    //PitchLoad();
+    Load();
 }
 
 PIDTunerWidget::~PIDTunerWidget(){
@@ -104,7 +103,7 @@ void PIDTunerWidget::DFPChanged(int val){
   ui->DMax->setText(QString::number(999*pow(10,val)));
   ui->DDisp->setText(QString::number(PID[d].getValue()));
 }
-// void PIDTuner::PitchSave(){
+void PIDTunerWidget::Save(){
 //   uint16_t d;
 //   int i=0;
 //   std::fstream f;
@@ -113,25 +112,34 @@ void PIDTunerWidget::DFPChanged(int val){
 //   f<<PID[pitchP].byte<<std::endl;
 //   f<<PID[pitchI].byte<<std::endl;
 //   f<<PID[pitchD].byte<<std::endl;
-//   f.close();
-// }
-// void PIDTuner::PitchLoad(){
-//   uint16_t d;
-//   int i=0;
-//   std::fstream f;
-//   f.open(CONFIG_PATH+"config.pid",std::ios::in);
-//   while(i++<pitchP)f>>d;
-//   f>>PID[pitchP].byte;
-//   f>>PID[pitchI].byte;
-//   f>>PID[pitchD].byte;
-//   f.close();
-//   ui->PitchP->setSliderPosition(PID[pitchP].getData());
-//   ui->PitchI->setSliderPosition(PID[pitchI].getData());
-//   ui->PitchD->setSliderPosition(PID[pitchD].getData());
-//   ui->PitchPFP->setSliderPosition(PID[pitchP].getExp());
-//   ui->PitchIFP->setSliderPosition(PID[pitchI].getExp());
-//   ui->PitchDFP->setSliderPosition(PID[pitchD].getExp());
-// }
+
+}
+void PIDTunerWidget::Load(){
+  std::string line;
+  std::vector <std::string> tokens;
+  std::fstream f;
+  f.open(CONFIG_PATH+"config.pid",std::ios::in);
+  while (std::getline(f, line))
+  {
+     boost::trim(line);
+     if (line[0] == '#' || line.size() == 0)
+       continue;
+     tokens=boost::split(tokens,line,boost::is_any_of(",:|[]()<>"));
+     if(tokens[0]==LABEL.toStdString()){
+       PID[p].setValue(std::atof(tokens[1].c_str()));
+       PID[i].setValue(std::atof(tokens[2].c_str()));
+       PID[d].setValue(std::atof(tokens[3].c_str()));
+       break;
+     }
+  }
+  f.close();
+  ui->P->setSliderPosition(PID[p].getData());
+  ui->I->setSliderPosition(PID[i].getData());
+  ui->D->setSliderPosition(PID[d].getData());
+  ui->PFP->setSliderPosition(PID[p].getExp());
+  ui->IFP->setSliderPosition(PID[i].getExp());
+  ui->DFP->setSliderPosition(PID[d].getExp());
+}
 void PIDTunerWidget::Reset(){
   PID[p].setValue(0);
   PID[i].setValue(0);
@@ -147,13 +155,14 @@ void PIDTunerWidget::Reset(){
 void PIDTunerWidget::initialiseVariables(QString label){
   SAVE_PATH = ros::package::getPath("quantum_controller")+"/saved/"+label.toStdString();
   CONFIG_PATH=ros::package::getPath("quantum_controller")+"/config/";
+  LABEL=label;
   TIME_OFFSET=DISPLAY_TIME=0;BUFFER=20;
   GRAPH_DISPLAY[state]=GRAPH_DISPLAY[error]=
   GRAPH_DISPLAY[correction]=GRAPH_DISPLAY[setPoint]=true;
   AUTO_SCROLL_MODE=true;
   ui->setupUi(this);
 }
-void PIDTunerWidget::setupGraph(QString label){
+void PIDTunerWidget::setupGraph(){
   QLinearGradient plotGradient;
   plotGradient.setStart(0, 0);
   plotGradient.setFinalStop(0, 350);
@@ -190,9 +199,9 @@ void PIDTunerWidget::setupGraph(QString label){
   ui->Graph->yAxis->setLabelColor(Qt::white);
   ui->Graph->yAxis2->setLabelColor(Qt::white);
   ui->Graph->xAxis->setLabel("mili seconds (ms)");
-  ui->Graph->yAxis->setLabel("degrees");
+  ui->Graph->yAxis->setLabel("Value");
   ui->Graph->yAxis2->setLabel("PID corection %");
-  ui->Graph->addGraph()->setName(label);
+  ui->Graph->addGraph()->setName(LABEL);
   ui->Graph->addGraph()->setName("Setpoint");
   ui->Graph->addGraph()->setName("error");
   ui->Graph->addGraph()->setName("PID");
@@ -222,8 +231,8 @@ void PIDTunerWidget::setupSlots(){
   connect(ui->PFP,SIGNAL(valueChanged(int)),this,SLOT(PFPChanged(int)));
   connect(ui->IFP,SIGNAL(valueChanged(int)),this,SLOT(IFPChanged(int)));
   connect(ui->DFP,SIGNAL(valueChanged(int)),this,SLOT(DFPChanged(int)));
-  //connect(ui->SavePID, SIGNAL(pressed()), this, SLOT(Save()));
-  //connect(ui->LoadPID, SIGNAL(pressed()), this, SLOT(Load()));
+  connect(ui->SavePID, SIGNAL(pressed()), this, SLOT(Save()));
+  connect(ui->LoadPID, SIGNAL(pressed()), this, SLOT(Load()));
   connect(ui->ResetPID, SIGNAL(pressed()), this, SLOT(Reset()));
   //connect(ui->UploadPID, SIGNAL(pressed()), this, SLOT(Upload()));
 }
@@ -252,6 +261,7 @@ void PIDTunerWidget::tabKill(){
   GraphInspect(false);
   DISPLAY_TIME=TIME_OFFSET=0;
 }
+
 void PIDTunerWidget::pid::setExp(int val){
   val+=16;
   byte=(uint16_t)(byte&0x83FF|val<<10);
@@ -261,14 +271,15 @@ void PIDTunerWidget::pid::setData(int val){
   if(val<0)
   byte|=1<<15;
 }
-void PIDTunerWidget::pid::setValue(float val){
+void PIDTunerWidget::pid::setValue(double val){
   if(val==0){
     setData(0);
     setExp(0);
     return;
   }
   int exp= (int)log10(abs(val)) -2;
-  int data=(int)(val*pow(10,exp));
+  int data=(int)(val*pow(10,-exp));
+  qDebug()<<"value:"<<val<<"\tdata:"<<data<<"\texp:"<<exp<<endl;
   setData(data);
   setExp(exp);
 }
