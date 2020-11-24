@@ -166,6 +166,9 @@ void PIDTunerWidget::Reset(){
   ui->IFP->setSliderPosition(PID[i].getExp());
   ui->DFP->setSliderPosition(PID[d].getExp());
 }
+void PIDTunerWidget::Upload(){
+
+}
 
 void PIDTunerWidget::initialiseVariables(QString label){
   SAVE_PATH = ros::package::getPath("quantum_controller")+"/saved/"+label.toStdString();
@@ -249,7 +252,7 @@ void PIDTunerWidget::setupSlots(){
   connect(ui->SavePID, SIGNAL(pressed()), this, SLOT(Save()));
   connect(ui->LoadPID, SIGNAL(pressed()), this, SLOT(Load()));
   connect(ui->ResetPID, SIGNAL(pressed()), this, SLOT(Reset()));
-  //connect(ui->UploadPID, SIGNAL(pressed()), this, SLOT(Upload()));
+  connect(ui->UploadPID, SIGNAL(pressed()), this, SLOT(Upload()));
 }
 
 void PIDTunerWidget::updateDataPoints(double val[], double t){
@@ -261,7 +264,7 @@ void PIDTunerWidget::updateDataPoints(double val[], double t){
   if(GRAPH_DISPLAY[correction])
     ui->Graph->graph(correction)->addData(t, val[correction]);
   if(GRAPH_DISPLAY[error])
-    ui->Graph->graph(error)->addData(t,val[error]);
+    ui->Graph->graph(error)->addData(t,val[state]-val[setPoint]);
   if(AUTO_SCROLL_MODE)
     DISPLAY_TIME=t;
   if(GRAPH_DISPLAY[state]|GRAPH_DISPLAY[setPoint]|GRAPH_DISPLAY[error]|GRAPH_DISPLAY[correction]){

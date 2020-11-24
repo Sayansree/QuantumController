@@ -2,9 +2,9 @@
 #define PIDTUNER_H
 
 #include <QMainWindow>
-#include <QApplication>
 #include <QPixmap>
-// #include <stdio.h>
+#include <QCloseEvent>
+#include <QMessageBox>
 #include <vector>
 #include <string>
 #include "ui_PIDTuner.h"
@@ -21,20 +21,23 @@ class PIDTuner : public QMainWindow
 public:
     explicit PIDTuner( QWidget *parent = 0);
     ~PIDTuner();
-
     void verifyValues(uint16_t [], bool []);
-    void updateDataPoints(double [][4], double t);
+    void updateDataPoints(double [][3], double t);
 
 public slots:
     void TabChanged(int);
-
+    void Load();
+    void Save();
+    void Edit();
+    void Quit();
 private:
     void setup();
     void loadTabs();
     void addTab(QString);
+    void closeEvent(QCloseEvent*);
     int ACTIVE_WINDOW;
     double TIME_OFFSET,T;
-    std::string LOGO_PATH,CONFIG_PATH;
+    std::string LOGO_PATH,CONFIG_FILE_PATH;
     Ui::PIDTuner *ui;
     std::vector<PIDTunerWidget*> TABS;
 

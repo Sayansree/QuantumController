@@ -2,7 +2,7 @@
 #define PIDTUNERWIDGET_H
 
 #include <QWidget>
-#include <QDebug>
+//#include <QDebug>
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 #include <ros/package.h>
@@ -20,7 +20,7 @@ public:
     explicit PIDTunerWidget(QString, QWidget*);
     ~PIDTunerWidget();
 
-    void updateDataPoints(double [4], double t);//
+    void updateDataPoints(double [3], double t);//
     void tabKill();
     //void veri
 public slots:
@@ -44,7 +44,7 @@ public slots:
     void Load();
     void Save();
     void Reset();
-    //void Upload();
+    void Upload();
 private:
 
     void initialiseVariables(QString);
