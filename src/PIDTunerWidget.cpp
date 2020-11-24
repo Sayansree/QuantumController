@@ -294,7 +294,6 @@ void PIDTunerWidget::pid::setValue(double val){
   }
   int exp= (int)log10(abs(val)) -2;
   int data=(int)(val*pow(10,-exp));
-  qDebug()<<"value:"<<val<<"\tdata:"<<data<<"\texp:"<<exp<<endl;
   setData(data);
   setExp(exp);
 }

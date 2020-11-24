@@ -1,5 +1,8 @@
-#
+#avoid use of space in between
+#DOF<P,I,D>
 Pitch<1.000000,1.000000,1.000000>
-#yuy
 Roll<0.100000,0.010000,0.001000>
 Yaw<1234,12345,0>
+Surge<1,1,1>
+Sway<0,0,0>
+Heave<0,0,0>

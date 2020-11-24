@@ -4,11 +4,8 @@
 #include <QMainWindow>
 #include <QApplication>
 #include <QPixmap>
-// #include <QTimer>
-// #include <QDebug>
 // #include <stdio.h>
 #include <vector>
-// #include <cmath>
 #include <string>
 #include "ui_PIDTuner.h"
 #include "quantum_controller/PIDTunerWidget.h"
@@ -33,10 +30,11 @@ public slots:
 
 private:
     void setup();
+    void loadTabs();
     void addTab(QString);
     int ACTIVE_WINDOW;
     double TIME_OFFSET,T;
-    std::string LOGO_PATH;
+    std::string LOGO_PATH,CONFIG_PATH;
     Ui::PIDTuner *ui;
     std::vector<PIDTunerWidget*> TABS;
 

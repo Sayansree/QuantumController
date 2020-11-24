@@ -25,31 +25,31 @@ public:
     //void veri
 public slots:
     // Tuing Window
-    void GraphClear();//
-    void GraphSave();//
-    void GraphAutoScroll();//
-    void GraphInspect(bool);//
-    void ValueGraph(int);//
-    void ErrorGraph(int);//
-    void SetpointGraph(int);//
-    void CorrectionGraph(int);//
-    void BufferChanged(int);//
-    void DisplayChanged(int);//
-    void PChanged(int);//
-    void IChanged(int);//
-    void DChanged(int);//
-    void PFPChanged(int);//
-    void IFPChanged(int);//
-    void DFPChanged(int);//
+    void GraphClear();
+    void GraphSave();
+    void GraphAutoScroll();
+    void GraphInspect(bool);
+    void ValueGraph(int);
+    void ErrorGraph(int);
+    void SetpointGraph(int);
+    void CorrectionGraph(int);
+    void BufferChanged(int);
+    void DisplayChanged(int);
+    void PChanged(int);
+    void IChanged(int);
+    void DChanged(int);
+    void PFPChanged(int);
+    void IFPChanged(int);
+    void DFPChanged(int);
     void Load();
     void Save();
-    void Reset();//
+    void Reset();
     //void Upload();
 private:
 
-    void initialiseVariables(QString);//
-    void setupGraph();//
-    void setupSlots();// load save upload
+    void initialiseVariables(QString);
+    void setupGraph();
+    void setupSlots();// upload
     enum DataIndex {state,setPoint,correction,error};
     enum PIDIndex { p, i, d};
     struct pid{
