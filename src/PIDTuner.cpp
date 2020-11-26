@@ -3,7 +3,8 @@
 PIDTuner::PIDTuner( QWidget *parent) :
     QMainWindow(parent), ui(new Ui::PIDTuner)
 {
-    setup();
+    initialiseVariables();
+    setupSlots();
     loadTabs();
 }
 PIDTuner::~PIDTuner(){
@@ -32,12 +33,17 @@ void PIDTuner::Edit(){
 void PIDTuner::Quit(){
   this->close();
 }
-void PIDTuner::setup(){
-  //LOGO_PATH = ros::package::getPath("quantum_controller") + "/utils/logo.jpeg";
+void PIDTuner::initialiseVariables(){
+  LOGO_PATH = ros::package::getPath("quantum_controller") + "/utils/logo.png";
   CONFIG_FILE_PATH=ros::package::getPath("quantum_controller")+"/config/config.pid";
   TIME_OFFSET=T=0;
   ACTIVE_WINDOW=0;
   ui->setupUi(this);
+  QPixmap pm(QString::fromStdString(LOGO_PATH));
+  ui->logo->setPixmap(pm.scaled(ui->logo->size()));
+  ui->logo->setScaledContents(true);
+}
+void PIDTuner::setupSlots(){
   connect(ui->Tuning,SIGNAL(currentChanged(int)),this,SLOT(TabChanged(int)));
   connect(ui->action_Load,SIGNAL(triggered()),this,SLOT(Load()));
   connect(ui->action_Save,SIGNAL(triggered()),this,SLOT(Save()));
@@ -45,7 +51,7 @@ void PIDTuner::setup(){
   connect(ui->action_Quit,SIGNAL(triggered()),this,SLOT(Quit()));
 }
 void PIDTuner::addTab(QString label){
-  TABS.push_back(new PIDTunerWidget(label,new QWidget()));
+  TABS.push_back(new PIDTunerWidget(label));
   ui->Tuning->addTab(TABS.back(),label);
 }
 void PIDTuner::loadTabs(){

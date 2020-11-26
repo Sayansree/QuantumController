@@ -167,7 +167,7 @@ void PIDTunerWidget::Reset(){
   ui->DFP->setSliderPosition(PID[d].getExp());
 }
 void PIDTunerWidget::Upload(){
-
+  // to do 
 }
 
 void PIDTunerWidget::initialiseVariables(QString label){

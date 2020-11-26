@@ -17,7 +17,7 @@ class PIDTunerWidget : public QWidget
     Q_OBJECT
 
 public:
-    explicit PIDTunerWidget(QString, QWidget*);
+    explicit PIDTunerWidget(QString, QWidget* parent=0);
     ~PIDTunerWidget();
 
     void updateDataPoints(double [3], double t);//

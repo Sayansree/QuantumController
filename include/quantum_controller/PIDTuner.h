@@ -31,7 +31,8 @@ public slots:
     void Edit();
     void Quit();
 private:
-    void setup();
+    void initialiseVariables();
+    void setupSlots();
     void loadTabs();
     void addTab(QString);
     void closeEvent(QCloseEvent*);
