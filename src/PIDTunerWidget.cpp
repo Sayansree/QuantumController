@@ -68,10 +68,20 @@ void PIDTunerWidget::CorrectionGraph(int val){
 void PIDTunerWidget::BufferChanged(int val){
   ui->BufferValue->setText(QString::number(val));
   BUFFER=val;
+  if(!AUTO_SCROLL_MODE){
+    ui->Graph->xAxis->setRange(DISPLAY_TIME-BUFFER,DISPLAY_TIME+BUFFER/5.0);
+    ui->Graph->yAxis->rescale();
+    ui->Graph->yAxis->scaleRange(1.5);
+    ui->Graph->replot();
+  }
 }
 void PIDTunerWidget::DisplayChanged(int val){
   DISPLAY_TIME=val;
   ui->ManualValue->setText(QString::number(DISPLAY_TIME));
+  ui->Graph->xAxis->setRange(DISPLAY_TIME-BUFFER,DISPLAY_TIME+BUFFER/5.0);
+  ui->Graph->yAxis->rescale();
+  ui->Graph->yAxis->scaleRange(1.5);
+  ui->Graph->replot();
 }
 void PIDTunerWidget::PChanged(int val){
   PID[p].setData(val);
@@ -167,7 +177,7 @@ void PIDTunerWidget::Reset(){
   ui->DFP->setSliderPosition(PID[d].getExp());
 }
 void PIDTunerWidget::Upload(){
-  // to do 
+  // to do
 }
 
 void PIDTunerWidget::initialiseVariables(QString label){
@@ -265,14 +275,15 @@ void PIDTunerWidget::updateDataPoints(double val[], double t){
     ui->Graph->graph(correction)->addData(t, val[correction]);
   if(GRAPH_DISPLAY[error])
     ui->Graph->graph(error)->addData(t,val[state]-val[setPoint]);
-  if(AUTO_SCROLL_MODE)
+  if(AUTO_SCROLL_MODE){
     DISPLAY_TIME=t;
-  if(GRAPH_DISPLAY[state]|GRAPH_DISPLAY[setPoint]|GRAPH_DISPLAY[error]|GRAPH_DISPLAY[correction]){
-    ui->Graph->xAxis->setRange(DISPLAY_TIME-BUFFER,DISPLAY_TIME+BUFFER/5.0);
-    ui->Graph->yAxis->rescale();
-    ui->Graph->yAxis->scaleRange(1.5);
-    ui->Graph->replot();
+    if(GRAPH_DISPLAY[state]|GRAPH_DISPLAY[setPoint]|GRAPH_DISPLAY[error]|GRAPH_DISPLAY[correction]){
+      ui->Graph->xAxis->setRange(DISPLAY_TIME-BUFFER,DISPLAY_TIME+BUFFER/5.0);
+      ui->Graph->yAxis->rescale();
+      ui->Graph->yAxis->scaleRange(1.5);
+    }
   }
+  ui->Graph->replot();
 }
 void PIDTunerWidget::tabKill(){
   GraphClear();
