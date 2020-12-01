@@ -2,10 +2,6 @@ cmake_minimum_required(VERSION 3.1.0)
 project(quantum_controller)
 add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  rospy
-  genmsg
-  roscpp
   roslib
 )
 find_package(Qt4 REQUIRED COMPONENTS QtCore QtGui)
@@ -41,4 +37,6 @@ add_library(qt_lib ${QT_SOURCES} ${QT_FORMS_HPP} ${QT_MOC_HPP})
 target_link_libraries(qt_lib ${QT_LIBRARIES} ${catkin_LIBRARIES})
 
 add_executable(QuantumPIDTuner src/main.cpp)
-target_link_libraries(QuantumPIDTuner qt_lib ${catkin_LIBRARIES} )
+target_link_libraries(QuantumPIDTuner qt_lib )
+
+add_executable(serialTest src/Serial.cpp include/serial/Serial.h)

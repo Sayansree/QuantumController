@@ -2,7 +2,6 @@
 #define PIDTUNERWIDGET_H
 
 #include <QWidget>
-//#include <QDebug>
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 #include <ros/package.h>
