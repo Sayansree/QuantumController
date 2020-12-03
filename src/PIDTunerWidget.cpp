@@ -124,7 +124,7 @@ void PIDTunerWidget::Save(){
      lines.push_back(line+"\n");
      if (line[0] == '#' || line.size() == 0)
        continue;
-     tokens=boost::split(tokens,line,boost::is_any_of(",:|[]()<>"));
+     boost::split(tokens,line,boost::is_any_of(",:|[]()<>"));
      if(tokens[0]==LABEL.toStdString()){
        line=tokens[0]+"<"
        +std::to_string(PID[p].getValue())+","
@@ -149,7 +149,7 @@ void PIDTunerWidget::Load(){
      boost::trim(line);
      if (line[0] == '#' || line.size() == 0)
        continue;
-     tokens=boost::split(tokens,line,boost::is_any_of(",:|[]()<>"));
+     boost::split(tokens,line,boost::is_any_of(",:|[]()<>"));
      if(tokens[0]==LABEL.toStdString()){
        PID[p].setValue(std::atof(tokens[1].c_str()));
        PID[i].setValue(std::atof(tokens[2].c_str()));

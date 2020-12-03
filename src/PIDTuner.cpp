@@ -64,7 +64,7 @@ void PIDTuner::loadTabs(){
      boost::trim(line);
      if (line[0] == '#' || line.size() == 0)
        continue;
-     tokens=boost::split(tokens,line,boost::is_any_of(",:|[]()<>"));
+     boost::split(tokens,line,boost::is_any_of(",:|[]()<>"));
      addTab(QString::fromStdString(tokens[0]));
   }
   f.close();

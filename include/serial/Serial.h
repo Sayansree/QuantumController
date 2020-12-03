@@ -12,21 +12,27 @@
 #include <memory>
 #include <stdexcept>
 #include <array>
+#include <vector>
+#include <boost/algorithm/string.hpp>
 
 class Serial{
 
 public:
   Serial();
   ~Serial();
-  bool begin(const char*,speed_t BAUDRATE);
+  bool begin(const char*, speed_t);
   void end();
   void flushI();
   void flushO();
   void flushIO();
-  bool handshake(std::string);
+  std::string autoConnect(std::string, speed_t);
+  std::vector <std::string> scanPorts();
+
 
 private:
+  bool handshake(std::string);
   std::string exec(const char*);
+  std::string PORT;
   int fd;
 };
 
