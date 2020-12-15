@@ -8,10 +8,11 @@ Serial::~Serial(){
 	end();
 }
 
-bool Serial::begin(const char *port,speed_t BAUDRATE){
+bool Serial::begin(std::string port,speed_t BAUDRATE){
+	if(PORT==port)return true;//to do check if disconnected
 	if(fd>-1) end();
-	fd = open(port,O_RDWR | O_NOCTTY);
-	if(fd ==-1)	return false;
+	fd = open(port.c_str(),O_RDWR | O_NOCTTY);
+	if(fd ==-1)return false;
 	termios SerialPortSettings;
 	tcgetattr(fd, &SerialPortSettings);
 	cfsetspeed(&SerialPortSettings,BAUDRATE);
@@ -20,12 +21,14 @@ bool Serial::begin(const char *port,speed_t BAUDRATE){
 	SerialPortSettings.c_iflag &= ~(IXON | IXOFF | IXANY | INLCR | ICRNL | IGNCR);
 	SerialPortSettings.c_oflag &= ~(ONLCR | OCRNL);
 	SerialPortSettings.c_lflag &= ~(ICANON | ECHO | ECHOE | ECHONL | ISIG | IEXTEN);
-	SerialPortSettings.c_cc[VMIN]  = 24; /* Read 10 characters */
+	SerialPortSettings.c_cc[VMIN]  = 1; /* Read 10 characters */
 	SerialPortSettings.c_cc[VTIME] = 1; //timout
 	tcsetattr(fd,TCSANOW,&SerialPortSettings);
+	PORT=port;
 	return true;
 }
 void Serial::end(){
+	if(fd=-1)return;
 	close(fd);
 	fd=-1;
 	PORT="";
@@ -42,20 +45,23 @@ void Serial::flushIO(){
 std::string Serial::autoConnect(std::string HANDSHAKE_REF,speed_t BAUDRATE){
 	vector<std::string> ports=scanPorts();
 	for(std::string port:ports){
-		begin(port.c_str(),BAUDRATE);
+		begin(port,BAUDRATE);
 		if(handshake(HANDSHAKE_REF)){
 			PORT=port;
 			return port;
 		}
 	}
+	PORT="";
 	return "";
 }
 bool Serial::handshake(std::string HANDSHAKE_REF){
+	if(fd==-1)return false;
 	HANDSHAKE_REF+="\r\n";
 	int  bytesRead = 0,len = HANDSHAKE_REF.length();
 	char handshake[len];
 	memset(handshake,'\x00',(len+1)*sizeof(char));
 	bytesRead = read(fd,&handshake,len);
+	std::cout << bytesRead << '\n';
 	return bytesRead == len && strcmp(HANDSHAKE_REF.c_str(),handshake) == 0;
 }
 
@@ -91,18 +97,22 @@ std::vector <std::string> Serial::scanPorts(){
 int main(){
 
 	Serial *s=new Serial();
-	vector<std::string> ports=s->scanPorts();
-	for(std::string s:ports)
-		cout<<s<<endl;
-	std::string responce = s->autoConnect("Quantum Ground Station",B2000000);
-	// if(s->begin("/dev/ttyUSB0",B2000000))
-	// 	cout<<"\n  ttyUSB0 Opened Successfully\n";
-	// else
-	// 	cout<<"\n  Error! in Opening ttyUSB0\n";
-	if(responce=="")
+	// vector<std::string> ports=s->scanPorts();
+	// for(std::string s:ports)
+	// 	cout<<s<<endl;
+	// std::string responce = s->autoConnect("Quantum Ground Station",B2000000);
+	if(s->begin("/dev/ttyUSB0",B2000000))
+		cout<<"\n  ttyUSB0 Opened Successfully\n";
+	else
+		cout<<"\n  Error! in Opening ttyUSB0\n";
+	if(!s->handshake("Quantum Ground Station"))
 			cout<<"\n No Device detected\n";
 	else
-		cout<<"\n"<<responce<<" handshake successful\n";
+		cout<<"\n"<<" handshake successful\n";
+		vector<std::string> ports=s->scanPorts();
+		for(std::string s:ports)
+			cout<<s<<endl;
+		std::string responce = s->autoConnect("Quantum Ground Station",B2000000);
 	cout<<"\n  ttyUSB0 Closed\n";
 	s->end();
 	return 0;

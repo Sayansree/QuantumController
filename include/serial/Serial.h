@@ -20,17 +20,18 @@ class Serial{
 public:
   Serial();
   ~Serial();
-  bool begin(const char*, speed_t);
+  bool begin(std::string, speed_t);
   void end();
   void flushI();
   void flushO();
   void flushIO();
   std::string autoConnect(std::string, speed_t);
   std::vector <std::string> scanPorts();
+  bool handshake(std::string);
 
 
 private:
-  bool handshake(std::string);
+
   std::string exec(const char*);
   std::string PORT;
   int fd;
